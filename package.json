@@ -1,7 +1,20 @@
 {
   "name": "telegram-link-bot",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "Telegram bot for converting links to share links with descriptions",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "link",
+    "share"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "node-telegram-bot-api": "^0.61.0"
   }
