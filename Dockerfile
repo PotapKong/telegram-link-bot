@@ -3,10 +3,8 @@ FROM node:18-alpine
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm install --production
 
 COPY . .
 
-ENV BOT_TOKEN=7060066084:AAFliUkwYDoEZk4B0jnKa37zn40v-L9lfYY
-
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
