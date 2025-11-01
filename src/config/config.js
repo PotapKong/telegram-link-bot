@@ -5,7 +5,7 @@ const config = {
   // Проверка наличия обязательных переменных
   validate() {
     if (!this.botToken) {
-      console.error('ERROR: BOT_TOKEN is not set in environment variables!');
+      console.error('❌ ОШИБКА: BOT_TOKEN не установлен в переменных окружения!');
       process.exit(1);
     }
     return true;

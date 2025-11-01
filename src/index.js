@@ -42,7 +42,7 @@ function registerInlineHandlers() {
  * Главная функция запуска бота
  */
 async function main() {
-  console.log('🤖 Starting Telegram Link Bot...\n');
+  console.log('🤖 Запуск Telegram Link Bot...\n');
 
   // Инициализация бота
   await initBot();
@@ -52,11 +52,11 @@ async function main() {
   registerMessageHandlers();
   registerInlineHandlers();
 
-  console.log('\n✨ All handlers registered. Bot is running!\n');
+  console.log('\n✨ Все обработчики зарегистрированы. Бот работает!\n');
 }
 
 // Запуск бота
 main().catch((error) => {
-  console.error('❌ Failed to start bot:', error);
+  console.error('❌ Не удалось запустить бота:', error);
   process.exit(1);
 });

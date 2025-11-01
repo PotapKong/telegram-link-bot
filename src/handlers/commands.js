@@ -21,7 +21,7 @@ async function handleStart(bot, msg) {
     await bot.sendMessage(msg.chat.id, welcomeMessage);
     userStates.delete(msg.chat.id);
   } catch (error) {
-    console.error('Error in /start command:', error);
+    console.error('❌ Ошибка в команде /start:', error);
   }
 }
 
@@ -56,7 +56,7 @@ async function handleHelp(bot, msg) {
 
     await bot.sendMessage(msg.chat.id, helpMessage);
   } catch (error) {
-    console.error('Error in /help command:', error);
+    console.error('❌ Ошибка в команде /help:', error);
   }
 }
 
@@ -71,7 +71,7 @@ async function handleLink(bot, msg) {
       '🔗 Отправьте ссылку на Telegram-пост или перешлите пост из канала:'
     );
   } catch (error) {
-    console.error('Error in /link command:', error);
+    console.error('❌ Ошибка в команде /link:', error);
   }
 }
 
@@ -95,7 +95,7 @@ async function handleCancel(bot, msg) {
       );
     }
   } catch (error) {
-    console.error('Error in /cancel command:', error);
+    console.error('❌ Ошибка в команде /cancel:', error);
   }
 }
 

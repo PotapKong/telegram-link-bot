@@ -113,7 +113,7 @@ async function handleInlineQuery(bot, query) {
       is_personal: true
     });
   } catch (error) {
-    console.error('Error handling inline query:', error);
+    console.error('❌ Ошибка при обработке inline-запроса:', error);
     try {
       // Отправляем пустой результат в случае ошибки
       await bot.answerInlineQuery(query.id, [], {
@@ -121,7 +121,7 @@ async function handleInlineQuery(bot, query) {
         is_personal: true
       });
     } catch (err) {
-      console.error('Failed to answer inline query:', err);
+      console.error('❌ Не удалось ответить на inline-запрос:', err);
     }
   }
 }
