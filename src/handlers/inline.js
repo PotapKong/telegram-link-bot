@@ -62,21 +62,20 @@ async function showMainMenu(bot, query) {
       title: '⚡ Команды SnapKit',
       description: 'Доступные inline-команды',
       input_message_content: {
-        message_text: `⚡ **SnapKit — Inline команды**
+        message_text: `⚡ SnapKit — Inline команды
 
-📝 **Доступные команды:**
+📝 Доступные команды:
 
-🔗 **link** — Создать share-ссылку
+🔗 link — Создать share-ссылку
    @snapkit_bot link https://t.me/... Описание
 
-💡 **help** — Показать справку
+💡 help — Показать справку
    @snapkit_bot help
 
-🎯 **Быстрый режим** (без команды):
+🎯 Быстрый режим (без команды):
    @snapkit_bot https://t.me/... Описание
 
-Щелк — и готово! 🚀`,
-        parse_mode: 'Markdown'
+Щелк — и готово! 🚀`
       }
     },
     {
@@ -85,8 +84,18 @@ async function showMainMenu(bot, query) {
       title: '💡 Справка',
       description: 'Показать инструкцию по использованию',
       input_message_content: {
-        message_text: '⚡ SnapKit — мгновенный inline-режим!\n\n**Примеры:**\n• @snapkit_bot help\n• @snapkit_bot link https://t.me/channel/123\n• @snapkit_bot https://t.me/durov/123 Пост\n\n**Скоро:**\n• @snapkit_bot video <url>\n• @snapkit_bot template <name>\n\nЩелк — и готово! 🚀',
-        parse_mode: 'Markdown'
+        message_text: `⚡ SnapKit — мгновенный inline-режим!
+
+Примеры:
+• @snapkit_bot help
+• @snapkit_bot link https://t.me/channel/123
+• @snapkit_bot https://t.me/durov/123 Пост
+
+Скоро:
+• @snapkit_bot video <url>
+• @snapkit_bot template <name>
+
+Щелк — и готово! 🚀`
       }
     }
   ];
@@ -110,33 +119,30 @@ async function handleHelpCommand(bot, query) {
       title: '📖 Справка SnapKit',
       description: 'Полная инструкция по использованию',
       input_message_content: {
-        message_text: `📖 **SnapKit — Справка по inline-режиму**
+        message_text: `📖 SnapKit — Справка по inline-режиму
 
-⚡ **Inline-команды:**
+⚡ Inline-команды:
 
-\`@snapkit_bot help\`
+@snapkit_bot help
 Показать эту справку
 
-\`@snapkit_bot link <url> <описание>\`
+@snapkit_bot link <url> <описание>
 Создать share-ссылку с описанием
 
-\`@snapkit_bot <url> <описание>\`
+@snapkit_bot <url> <описание>
 Быстрый режим (без команды "link")
 
-🎯 **Примеры:**
-\`\`\`
+🎯 Примеры:
 @snapkit_bot help
 @snapkit_bot link https://t.me/durov/123 Пост
 @snapkit_bot https://t.me/telegram/456 Новости
-\`\`\`
 
-🔮 **Скоро появится:**
-• \`video\` — обработка видео
-• \`template\` — применить шаблон
-• \`image\` — обработка картинок
+🔮 Скоро появится:
+• video — обработка видео
+• template — применить шаблон
+• image — обработка картинок
 
-Щелк — и готово! 🚀`,
-        parse_mode: 'Markdown'
+Щелк — и готово! 🚀`
       }
     },
     {
@@ -145,22 +151,21 @@ async function handleHelpCommand(bot, query) {
       title: '🎯 Быстрые примеры',
       description: 'Готовые примеры для копирования',
       input_message_content: {
-        message_text: `⚡ **Быстрые примеры использования:**
+        message_text: `⚡ Быстрые примеры использования:
 
-**Создать ссылку:**
+Создать ссылку:
 @snapkit_bot https://t.me/durov/123
 
-**С описанием:**
+С описанием:
 @snapkit_bot https://t.me/telegram/456 Важные новости
 
-**Через команду link:**
+Через команду link:
 @snapkit_bot link https://t.me/channel/789 Описание
 
-**Справка:**
+Справка:
 @snapkit_bot help
 
-💡 Копируйте и вставляйте в любой чат!`,
-        parse_mode: 'Markdown'
+💡 Копируйте и вставляйте в любой чат!`
       }
     }
   ];
@@ -184,8 +189,13 @@ async function handleLinkCommand(bot, query, queryText) {
         title: '⚠️ Укажите ссылку',
         description: 'Формат: @snapkit_bot link https://t.me/...',
         input_message_content: {
-          message_text: '⚠️ Не указана ссылка!\n\n**Правильный формат:**\n`@snapkit_bot link https://t.me/channel/123 Описание`\n\nИли без команды:\n`@snapkit_bot https://t.me/channel/123 Описание`',
-          parse_mode: 'Markdown'
+          message_text: `⚠️ Не указана ссылка!
+
+Правильный формат:
+@snapkit_bot link https://t.me/channel/123 Описание
+
+Или без команды:
+@snapkit_bot https://t.me/channel/123 Описание`
         }
       }
     ];
@@ -220,8 +230,15 @@ async function handleLinkCommand(bot, query, queryText) {
         title: '⚠️ Ссылка не найдена',
         description: 'Вставьте корректную ссылку на Telegram-пост',
         input_message_content: {
-          message_text: '❌ Не удалось найти ссылку на Telegram-пост.\n\n**Правильный формат:**\n`https://t.me/channel/123`\n`t.me/durov/456`\n\n**Примеры:**\n`@snapkit_bot https://t.me/telegram/123`\n`@snapkit_bot link https://t.me/durov/456 Описание`',
-          parse_mode: 'Markdown'
+          message_text: `❌ Не удалось найти ссылку на Telegram-пост.
+
+Правильный формат:
+https://t.me/channel/123
+t.me/durov/456
+
+Примеры:
+@snapkit_bot https://t.me/telegram/123
+@snapkit_bot link https://t.me/durov/456 Описание`
         }
       }
     ];
