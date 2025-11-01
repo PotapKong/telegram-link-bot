@@ -21,10 +21,10 @@ async function handleInlineQuery(bot, query) {
         {
           type: 'article',
           id: '0',
-          title: '📖 Как использовать inline-режим',
-          description: 'Вставьте ссылку на Telegram-пост после @bot_username',
+          title: '⚡ Как использовать SnapKit',
+          description: 'Вставьте ссылку на Telegram-пост после @snapkit_bot',
           input_message_content: {
-            message_text: '💡 Для использования inline-режима:\n\n1. Напишите @bot_username\n2. Вставьте ссылку на Telegram-пост\n3. Добавьте описание через пробел\n\nПример: @bot_username https://t.me/channel/123 Интересный пост'
+            message_text: '⚡ SnapKit — мгновенный inline-режим!\n\n1. Напишите @snapkit_bot\n2. Вставьте ссылку на Telegram-пост\n3. Добавьте описание через пробел\n\nПример:\n@snapkit_bot https://t.me/channel/123 Интересный пост\n\nЩелк — и готово! 🚀'
           }
         }
       ];
@@ -78,8 +78,8 @@ async function handleInlineQuery(bot, query) {
       {
         type: 'article',
         id: '2',
-        title: '✨ Share-ссылка создана',
-        description: description || 'Нажмите для отправки ссылки',
+        title: '⚡ Share-ссылка готова!',
+        description: description || 'Щелк — и готово! Нажмите для отправки',
         input_message_content: {
           message_text: shareLink
         }
