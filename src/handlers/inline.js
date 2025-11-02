@@ -6,6 +6,7 @@ const {
 const { generateScreenshotInline } = require('./screenshot');
 
 const BOT_USERNAME = "snapkit_bot";
+const OPEN_BOT_LINK_MD = '[Открыть чат с ботом](https://t.me/snapkit_bot)';
 
 /**
  * Обработка inline-запросов
@@ -29,20 +30,19 @@ async function handleInlineQuery(bot, query) {
     }
 
     if (command === 'link') {
-      // Убираем команду "link" из запроса
       const linkQuery = parts.slice(1).join(' ');
       return await handleLinkCommand(bot, query, linkQuery);
     }
 
     if (command === 'screenshot') {
-      // Inline режим не поддерживает обработку файлов
       const fallbackResult = {
         type: 'article',
         id: 'inline-screen-error',
         title: 'Оформление скриншота',
         description: 'Перейдите в чат с ботом для загрузки изображения',
         input_message_content: {
-          message_text: `⚠️ В inline-режиме Telegram невозможно прикрепить изображение. Для оформления скриншота: \n\n[Открыть чат с ботом](https://t.me/${BOT_USERNAME})\n\n1. Перейдите в чат с ботом\n2. Отправьте команду /screenshot\n3. Прикрепите картинку и выберите шаблон`
+          message_text: `⚠️ В inline-режиме Telegram невозможно прикрепить изображение. Для оформления скриншота:\n\n${OPEN_BOT_LINK_MD}\n\n1. Перейдите в чат с ботом\n2. Отправьте команду /screenshot\n3. Прикрепите картинку и выберите шаблон`,
+          parse_mode: 'Markdown'
         },
         reply_markup: {
           inline_keyboard: [[{
@@ -59,7 +59,6 @@ async function handleInlineQuery(bot, query) {
       return;
     }
 
-    // Если команда не найдена, обрабатываем как обычную ссылку
     return await handleLinkCommand(bot, query, queryText);
 
   } catch (error) {
@@ -75,10 +74,8 @@ async function handleInlineQuery(bot, query) {
   }
 }
 
-/**
- * Показать главное меню (при пустом запросе)
- */
 async function showMainMenu(bot, query) {
+  const mainMenuText = `⚡ SnapKit — Inline команды\n\n📝 Доступные команды:\n\n🔗 link — Создать share-ссылку\n   @snapkit_bot link https://t.me/... Описание\n\n💡 help — Показать справку\n   @snapkit_bot help\n\n🎯 Быстрый режим (без команды):\n   @snapkit_bot https://t.me/... Описание\n\n🖼 screenshot — оформление скриншота (только через чат)\n${OPEN_BOT_LINK_MD}\n\nЩелк — и готово! 🚀`;
   const results = [
     {
       type: 'article',
@@ -86,7 +83,8 @@ async function showMainMenu(bot, query) {
       title: '⚡ Команды SnapKit',
       description: 'Доступные inline-команды',
       input_message_content: {
-        message_text: `⚡ SnapKit — Inline команды\n\n📝 Доступные команды:\n\n🔗 link — Создать share-ссылку\n   @snapkit_bot link https://t.me/... Описание\n\n💡 help — Показать справку\n   @snapkit_bot help\n\n🎯 Быстрый режим (без команды):\n   @snapkit_bot https://t.me/... Описание\n\n🖼 screenshot — оформление скриншота (только через чат)\n[Открыть чат с ботом](https://t.me/${BOT_USERNAME})\n\nЩелк — и готово! 🚀`
+        message_text: mainMenuText,
+        parse_mode: 'Markdown'
       },
       reply_markup: {
         inline_keyboard: [[{
@@ -101,7 +99,8 @@ async function showMainMenu(bot, query) {
       title: '💡 Справка',
       description: 'Показать инструкцию по использованию',
       input_message_content: {
-        message_text: `⚡ SnapKit — мгновенный inline-режим!\n\nПримеры:\n• @snapkit_bot help\n• @snapkit_bot link https://t.me/channel/123\n• @snapkit_bot https://t.me/durov/123 Пост\n• @snapkit_bot screenshot (только текст)\n\nДля оформления скриншота отправьте команду /screenshot в чат с ботом, прикрепите изображение и выберите шаблон.\n\n[Открыть чат с ботом для загрузки скриншота](https://t.me/${BOT_USERNAME})`
+        message_text: `⚡ SnapKit — мгновенный inline-режим!\n\nПримеры:\n• @snapkit_bot help\n• @snapkit_bot link https://t.me/channel/123\n• @snapkit_bot https://t.me/durov/123 Пост\n• @snapkit_bot screenshot (только текст)\n\nДля оформления скриншота отправьте команду /screenshot в чат с ботом, прикрепите изображение и выберите шаблон.\n\n${OPEN_BOT_LINK_MD}`,
+        parse_mode: 'Markdown'
       },
       reply_markup: {
         inline_keyboard: [[{
@@ -120,10 +119,8 @@ async function showMainMenu(bot, query) {
   });
 }
 
-/**
- * Обработка команды help
- */
 async function handleHelpCommand(bot, query) {
+  const helpText = `📖 SnapKit — Справка по inline-режиму\n\n⚡ Inline-команды:\n\n@snapkit_bot help\nПоказать эту справку\n\n@snapkit_bot link <url> <описание>\nСоздать share-ссылку с описанием\n\n@snapkit_bot <url> <описание>\nБыстрый режим (без команды "link")\n\n🖼 screenshot (только через чат)\nОформить скриншот можно только в приват-чате:\n${OPEN_BOT_LINK_MD}\n\n🎯 Примеры:\n@snapkit_bot help\n@snapkit_bot link https://t.me/durov/123 Пост\n@snapkit_bot https://t.me/telegram/456 Новости\n\nДля оформления скриншота отправьте команду /screenshot в диалоге с ботом и следуйте инструкциям.\n${OPEN_BOT_LINK_MD}`;
   const results = [
     {
       type: 'article',
@@ -131,7 +128,8 @@ async function handleHelpCommand(bot, query) {
       title: '📖 Справка SnapKit',
       description: 'Полная инструкция по использованию',
       input_message_content: {
-        message_text: `📖 SnapKit — Справка по inline-режиму\n\n⚡ Inline-команды:\n\n@snapkit_bot help\nПоказать эту справку\n\n@snapkit_bot link <url> <описание>\nСоздать share-ссылку с описанием\n\n@snapkit_bot <url> <описание>\nБыстрый режим (без команды "link")\n\n🖼 screenshot (только через чат)\nОформить скриншот можно только в приват-чате:\n[Открыть чат с ботом](https://t.me/${BOT_USERNAME})\n\n🎯 Примеры:\n@snapkit_bot help\n@snapkit_bot link https://t.me/durov/123 Пост\n@snapkit_bot https://t.me/telegram/456 Новости\n\nДля оформления скриншота отправьте команду /screenshot в диалоге с ботом и следуйте инструкциям.\n[Открыть чат с ботом для загрузки скриншота](https://t.me/${BOT_USERNAME})`
+        message_text: helpText,
+        parse_mode: 'Markdown'
       },
       reply_markup: {
         inline_keyboard: [[{
@@ -146,7 +144,8 @@ async function handleHelpCommand(bot, query) {
       title: '🎯 Быстрые примеры',
       description: 'Готовые примеры для копирования',
       input_message_content: {
-        message_text: `⚡ Быстрые примеры использования:\n\nСоздать ссылку:\n@snapkit_bot https://t.me/durov/123\n\nС описанием:\n@snapkit_bot https://t.me/telegram/456 Важные новости\n\nЧерез команду link:\n@snapkit_bot link https://t.me/channel/789 Описание\n\nСправка:\n@snapkit_bot help\n\nОформление скриншота:\n/screenshot (только в чате с ботом)\n[Открыть чат с ботом для скриншота](https://t.me/${BOT_USERNAME})\n\n💡 Копируйте и вставляйте в любой чат!`
+        message_text: `⚡ Быстрые примеры использования:\n\nСоздать ссылку:\n@snapkit_bot https://t.me/durov/123\n\nС описанием:\n@snapkit_bot https://t.me/telegram/456 Важные новости\n\nЧерез команду link:\n@snapkit_bot link https://t.me/channel/789 Описание\n\nСправка:\n@snapkit_bot help\n\nОформление скриншота:\n/screenshot (только в чате с ботом)\n${OPEN_BOT_LINK_MD}\n\n💡 Копируйте и вставляйте в любой чат!`,
+        parse_mode: 'Markdown'
       },
       reply_markup: {
         inline_keyboard: [[{
@@ -165,11 +164,7 @@ async function handleHelpCommand(bot, query) {
   });
 }
 
-/**
- * Обработка команды link (создание share-ссылки)
- */
 async function handleLinkCommand(bot, query, queryText) {
-  // Если запрос пустой после команды
   if (!queryText || queryText.trim() === '') {
     const results = [
       {
@@ -178,7 +173,8 @@ async function handleLinkCommand(bot, query, queryText) {
         title: '⚠️ Укажите ссылку',
         description: 'Формат: @snapkit_bot link https://t.me/...',
         input_message_content: {
-          message_text: `⚠️ Не указана ссылка!\n\nПравильный формат:\n@snapkit_bot link https://t.me/channel/123 Описание\n\nИли без команды:\n@snapkit_bot https://t.me/channel/123 Описание`
+          message_text: `⚠️ Не указана ссылка!\n\nПравильный формат:\n@snapkit_bot link https://t.me/channel/123 Описание\n\nИли без команды:\n@snapkit_bot https://t.me/channel/123 Описание`,
+          parse_mode: 'Markdown'
         }
       }
     ];
@@ -190,16 +186,13 @@ async function handleLinkCommand(bot, query, queryText) {
     return;
   }
 
-  // Пытаемся извлечь ссылку и описание
   const parts = queryText.split(' ');
   let link = null;
   let description = '';
 
-  // Ищем ссылку в тексте
   for (let i = 0; i < parts.length; i++) {
     if (parts[i].includes('t.me/')) {
       link = extractTelegramLink(parts[i]);
-      // Всё после ссылки - описание
       description = parts.slice(i + 1).join(' ');
       break;
     }
@@ -213,7 +206,8 @@ async function handleLinkCommand(bot, query, queryText) {
         title: '⚠️ Ссылка не найдена',
         description: 'Вставьте корректную ссылку на Telegram-пост',
         input_message_content: {
-          message_text: `❌ Не удалось найти ссылку на Telegram-пост.\n\nПравильный формат:\nhttps://t.me/channel/123\nt.me/durov/456\n\nПримеры:\n@snapkit_bot https://t.me/telegram/123\n@snapkit_bot link https://t.me/durov/456 Описание`
+          message_text: `❌ Не удалось найти ссылку на Telegram-пост.\n\nПравильный формат:\nhttps://t.me/channel/123\nt.me/durov/456\n\nПримеры:\n@snapkit_bot https://t.me/telegram/123\n@snapkit_bot link https://t.me/durov/456 Описание`,
+          parse_mode: 'Markdown'
         }
       }
     ];
@@ -225,7 +219,6 @@ async function handleLinkCommand(bot, query, queryText) {
     return;
   }
 
-  // Создаем share-ссылку
   const shareLink = makeShareLink(link, description);
 
   const results = [
@@ -235,7 +228,8 @@ async function handleLinkCommand(bot, query, queryText) {
       title: '⚡ Share-ссылка готова!',
       description: description || 'Щелк — и готово! Нажмите для отправки',
       input_message_content: {
-        message_text: shareLink
+        message_text: shareLink,
+        parse_mode: 'Markdown'
       }
     },
     {
@@ -244,12 +238,12 @@ async function handleLinkCommand(bot, query, queryText) {
       title: '📋 Оригинальная ссылка',
       description: link,
       input_message_content: {
-        message_text: link
+        message_text: link,
+        parse_mode: 'Markdown'
       }
     }
   ];
 
-  // Если есть описание, добавляем вариант с форматированным текстом
   if (description) {
     results.push({
       type: 'article',
@@ -257,7 +251,8 @@ async function handleLinkCommand(bot, query, queryText) {
       title: '📝 С описанием',
       description: `${description}\n${link}`,
       input_message_content: {
-        message_text: `${description}\n\n${shareLink}`
+        message_text: `${description}\n\n${shareLink}`,
+        parse_mode: 'Markdown'
       }
     });
   }
