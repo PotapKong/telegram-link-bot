@@ -6,4 +6,9 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+    networks:
+      - root_default
 
+networks:
+  root_default:
+    external: true
