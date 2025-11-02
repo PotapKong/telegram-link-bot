@@ -9,6 +9,12 @@ const {
   makeShareLink
 } = require('../utils/linkUtils');
 
+const TEMPLATES = [
+  { label: 'iPhone', value: 'iphone' },
+  { label: 'Mac', value: 'mac-window' },
+  { label: 'Layered', value: 'layered' }
+];
+
 /**
  * Обработка входящих сообщений
  */
@@ -23,6 +29,8 @@ async function handleMessage(bot, msg) {
       await handleWaitingLink(bot, msg, chatId);
     } else if (state.step === 'waiting_desc') {
       await handleWaitingDescription(bot, msg, chatId, state);
+    } else if (state.step === 'waiting_template') {
+      await handleWaitingTemplate(bot, msg, chatId, state);
     }
   } catch (error) {
     console.error('❌ Ошибка при обработке сообщения:', error);
@@ -82,6 +90,40 @@ async function handleWaitingDescription(bot, msg, chatId, state) {
   userStates.delete(chatId);
 }
 
+/**
+ * Обработка этапа выбора шаблона оформления скриншота
+ */
+async function handleWaitingTemplate(bot, msg, chatId, state) {
+  // Пример: выбираем шаблон по сообщению-кнопке
+  const chosen = TEMPLATES.find(t => t.label.toLowerCase() === msg.text.toLowerCase());
+  if (!chosen) {
+    await bot.sendMessage(chatId, '❗ Выберите шаблон оформления через кнопку ниже.');
+    await sendTemplateKeyboard(bot, chatId);
+    return;
+  }
+  userStates.set(chatId, {
+    ...state,
+    step: 'waiting_background', // На следующем этапе будет выбор цвета/фона
+    template: chosen.value
+  });
+  await bot.sendMessage(chatId, `✅ Выбран шаблон: ${chosen.label}. Теперь выберите цвет или фон для скриншота.`);
+  // sendBackgroundKeyboard(bot, chatId); // Этот шаг реализуем далее
+}
+
+/**
+ * Отправить клавиатуру выбора шаблона
+ */
+async function sendTemplateKeyboard(bot, chatId) {
+  return bot.sendMessage(chatId, '🖼 Выберите шаблон оформления:', {
+    reply_markup: {
+      keyboard: [TEMPLATES.map(t => t.label)],
+      one_time_keyboard: true,
+      resize_keyboard: true
+    }
+  });
+}
+
 module.exports = {
-  handleMessage
+  handleMessage,
+  sendTemplateKeyboard
 };
