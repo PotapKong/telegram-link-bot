@@ -3,7 +3,7 @@
  */
 
 const { createCanvas } = require('canvas');
-const { applyGradient, drawRoundedRect } = require('../imageProcessor');
+const { applyGradient, drawRoundedRect } = require('../../utils/canvasUtils');
 
 /**
  * Применить iPhone mockup шаблон

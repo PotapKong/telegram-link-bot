@@ -2,8 +2,8 @@
  * Шаблон в стиле окна macOS
  */
 
-const { createCanvas, loadImage } = require('canvas');
-const { applyGradient, drawRoundedRect } = require('../imageProcessor');
+const { createCanvas } = require('canvas');
+const { applyGradient, drawRoundedRect } = require('../../utils/canvasUtils');
 
 /**
  * Применить Mac Window шаблон

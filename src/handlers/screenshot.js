@@ -250,9 +250,12 @@ async function handleGradientSelection(bot, query, gradientSlug) {
   } catch (error) {
     console.error('❌ Ошибка обработки градиента:', error);
 
+    // Получить состояние для логирования
+    const currentState = stateManager.getState(userId);
+
     // Логировать ошибку
     await webhookLogger.logError(userId, 'screenshot_processing_error', error.message, {
-      template: state?.template?.slug,
+      template: currentState?.template?.slug,
       gradient: gradientSlug
     });
 
