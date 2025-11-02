@@ -33,25 +33,21 @@ async function handleInlineQuery(bot, query) {
     }
 
     if (command === 'screenshot') {
-      // Убираем команду "screenshot" из запроса
-      const screenshotParams = parts.slice(1).join(' ');
-      try {
-        const screenshotResult = await generateScreenshotInline(screenshotParams);
-        await bot.answerInlineQuery(query.id, [screenshotResult], { cache_time: 0 });
-        return;
-      } catch (error) {
-        console.error('Ошибка в inline screenshot:', error);
-        const fallbackResult = {
-          type: 'article',
-          id: 'error',
-          title: 'Ошибка создания скриншота',
-          input_message_content: {
-            message_text: 'Не удалось создать скриншот. Попробуйте позже.'
-          }
-        };
-        await bot.answerInlineQuery(query.id, [fallbackResult]);
-        return;
-      }
+      // Inline режим не поддерживает обработку файлов
+      const fallbackResult = {
+        type: 'article',
+        id: 'inline-screen-error',
+        title: 'Оформление скриншота',
+        description: 'Перейдите в чат с ботом для загрузки изображения',
+        input_message_content: {
+          message_text: `⚠️ В inline-режиме Telegram невозможно прикрепить изображение. Для оформления скриншота:
+1. Перейдите в чат с ботом
+2. Отправьте команду /screenshot
+3. Прикрепите картинку и выберите шаблон`
+        }
+      };
+      await bot.answerInlineQuery(query.id, [fallbackResult], { cache_time: 300 });
+      return;
     }
 
     // Если команда не найдена, обрабатываем как обычную ссылку
@@ -94,7 +90,7 @@ async function showMainMenu(bot, query) {
 🎯 Быстрый режим (без команды):
    @snapkit_bot https://t.me/... Описание
 
-🖼 screenshot — Создать оформленный скриншот
+🖼 screenshot — оформление скриншота (только через чат)
 
 Щелк — и готово! 🚀`
       }
@@ -111,13 +107,11 @@ async function showMainMenu(bot, query) {
 • @snapkit_bot help
 • @snapkit_bot link https://t.me/channel/123
 • @snapkit_bot https://t.me/durov/123 Пост
-• @snapkit_bot screenshot <параметры>
+• @snapkit_bot screenshot (только текст)
 
-Скоро:
-• @snapkit_bot video <url>
-• @snapkit_bot template <name>
-
-Щелк — и готово! 🚀`
+Для оформления скриншота отправьте
+команду /screenshot в чат с ботом, прикрепите
+изображение и выберите шаблон.`
       }
     }
   ];
@@ -154,21 +148,15 @@ async function handleHelpCommand(bot, query) {
 @snapkit_bot <url> <описание>
 Быстрый режим (без команды "link")
 
-🖼 screenshot <параметры>
-Создать оформленный скриншот
+🖼 screenshot (только через чат)
+Оформить скриншот можно только в приват-чате
 
 🎯 Примеры:
 @snapkit_bot help
 @snapkit_bot link https://t.me/durov/123 Пост
 @snapkit_bot https://t.me/telegram/456 Новости
-@snapkit_bot screenshot style=mac color=blue
 
-🔮 Скоро появится:
-• video — обработка видео
-• template — применить шаблон
-• image — обработка картинок
-
-Щелк — и готово! 🚀`
+Для оформления скриншота отправьте команду /screenshot в диалоге с ботом и следуйте инструкциям.`
       }
     },
     {
@@ -191,8 +179,8 @@ async function handleHelpCommand(bot, query) {
 Справка:
 @snapkit_bot help
 
-🖼 Создать оформленный скриншот:
-@snapkit_bot screenshot style=mac color=blue
+Оформление скриншота:
+/screenshot (только в чате с ботом)
 
 💡 Копируйте и вставляйте в любой чат!`
       }
