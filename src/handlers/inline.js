@@ -60,7 +60,6 @@ async function handleInlineQuery(bot, query) {
     }
 
     return await handleLinkCommand(bot, query, queryText);
-
   } catch (error) {
     console.error('❌ Ошибка при обработке inline-запроса:', error);
     try {
@@ -119,4 +118,150 @@ async function showMainMenu(bot, query) {
   });
 }
 
-... (остальной код не изменился)
+async function handleHelpCommand(bot, query) {
+  const helpText = `📖 SnapKit — Справка по inline-режиму\n\n⚡ Inline-команды:\n\n@snapkit_bot help\nПоказать эту справку\n\n@snapkit_bot link <url> <описание>\nСоздать share-ссылку с описанием\n\n@snapkit_bot <url> <описание>\nБыстрый режим (без команды \"link\")\n\n🖼 screenshot (только через чат)\nОформить скриншот можно только в приват-чате:\n${OPEN_BOT_LINK_MD}\n\n🎯 Примеры:\n@snapkit_bot help\n@snapkit_bot link https://t.me/durov/123 Пост\n@snapkit_bot https://t.me/telegram/456 Новости\n\nДля оформления скриншота отправьте команду /screenshot в диалоге с ботом и следуйте инструкциям.\n${OPEN_BOT_LINK_MD}`;
+  const results = [
+    {
+      type: 'article',
+      id: 'help-1',
+      title: '📖 Справка SnapKit',
+      description: 'Полная инструкция по использованию',
+      input_message_content: {
+        message_text: helpText,
+        parse_mode: 'Markdown'
+      },
+      reply_markup: {
+        inline_keyboard: [[{
+          text: 'Открыть бот для скриншота',
+          url: `https://t.me/${BOT_USERNAME}`
+        }]]
+      }
+    },
+    {
+      type: 'article',
+      id: 'help-2',
+      title: '🎯 Быстрые примеры',
+      description: 'Готовые примеры для копирования',
+      input_message_content: {
+        message_text: `⚡ Быстрые примеры использования:\n\nСоздать ссылку:\n@snapkit_bot https://t.me/durov/123\n\nС описанием:\n@snapkit_bot https://t.me/telegram/456 Важные новости\n\nЧерез команду link:\n@snapkit_bot link https://t.me/channel/789 Описание\n\nСправка:\n@snapkit_bot help\n\nОформление скриншота:\n/screenshot (только в чате с ботом)\n${OPEN_BOT_LINK_MD}\n\n💡 Копируйте и вставляйте в любой чат!`,
+        parse_mode: 'Markdown'
+      },
+      reply_markup: {
+        inline_keyboard: [[{
+          text: 'Открыть бот для скриншота',
+          url: `https://t.me/${BOT_USERNAME}`
+        }]]
+      }
+    }
+  ];
+
+  await bot.answerInlineQuery(query.id, results, {
+    cache_time: 300,
+    is_personal: true,
+    switch_pm_text: 'Открыть бот для скриншота',
+    switch_pm_parameter: 'screenshot'
+  });
+}
+
+async function handleLinkCommand(bot, query, queryText) {
+  if (!queryText || queryText.trim() === '') {
+    const results = [
+      {
+        type: 'article',
+        id: 'link-empty',
+        title: '⚠️ Укажите ссылку',
+        description: 'Формат: @snapkit_bot link https://t.me/...',
+        input_message_content: {
+          message_text: `⚠️ Не указана ссылка!\n\nПравильный формат:\n@snapkit_bot link https://t.me/channel/123 Описание\n\nИли без команды:\n@snapkit_bot https://t.me/channel/123 Описание`,
+          parse_mode: 'Markdown'
+        }
+      }
+    ];
+
+    await bot.answerInlineQuery(query.id, results, {
+      cache_time: 30,
+      is_personal: true
+    });
+    return;
+  }
+
+  const parts = queryText.split(' ');
+  let link = null;
+  let description = '';
+
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i].includes('t.me/')) {
+      link = extractTelegramLink(parts[i]);
+      description = parts.slice(i + 1).join(' ');
+      break;
+    }
+  }
+
+  if (!link) {
+    const results = [
+      {
+        type: 'article',
+        id: 'link-notfound',
+        title: '⚠️ Ссылка не найдена',
+        description: 'Вставьте корректную ссылку на Telegram-пост',
+        input_message_content: {
+          message_text: `❌ Не удалось найти ссылку на Telegram-пост.\n\nПравильный формат:\nhttps://t.me/channel/123\nt.me/durov/456\n\nПримеры:\n@snapkit_bot https://t.me/telegram/123\n@snapkit_bot link https://t.me/durov/456 Описание`,
+          parse_mode: 'Markdown'
+        }
+      }
+    ];
+
+    await bot.answerInlineQuery(query.id, results, {
+      cache_time: 30,
+      is_personal: true
+    });
+    return;
+  }
+
+  const shareLink = makeShareLink(link, description);
+
+  const results = [
+    {
+      type: 'article',
+      id: 'link-share',
+      title: '⚡ Share-ссылка готова!',
+      description: description || 'Щелк — и готово! Нажмите для отправки',
+      input_message_content: {
+        message_text: shareLink,
+        parse_mode: 'Markdown'
+      }
+    },
+    {
+      type: 'article',
+      id: 'link-original',
+      title: '📋 Оригинальная ссылка',
+      description: link,
+      input_message_content: {
+        message_text: link,
+        parse_mode: 'Markdown'
+      }
+    }
+  ];
+
+  if (description) {
+    results.push({
+      type: 'article',
+      id: 'link-formatted',
+      title: '📝 С описанием',
+      description: `${description}\n${link}`,
+      input_message_content: {
+        message_text: `${description}\n\n${shareLink}`,
+        parse_mode: 'Markdown'
+      }
+    });
+  }
+
+  await bot.answerInlineQuery(query.id, results, {
+    cache_time: 60,
+    is_personal: true
+  });
+}
+
+module.exports = {
+  handleInlineQuery
+};
