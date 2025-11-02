@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  telegram-link-bot:
+    build: .
+    env_file:
+      - .env
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - default
+      - external_network
+
+networks:
+  external_network:
+    external: true
+    name: ${EXTERNAL_NETWORK:-bridge}
+

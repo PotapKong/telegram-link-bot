@@ -19,6 +19,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "node-telegram-bot-api": "^0.61.0"
+    "node-telegram-bot-api": "^0.61.0",
+    "pg": "^8.11.3",
+    "canvas": "^2.11.2",
+    "axios": "^1.6.2"
   }
 }
