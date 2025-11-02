@@ -1,7 +1,8 @@
 /**
- * Telegram Link Bot - Точка входа
+ * SnapKit Bot - Точка входа
  *
- * Бот для преобразования Telegram-ссылок в share-ссылки с описанием
+ * Мгновенный набор инструментов для контента
+ * Создавайте share-ссылки, обрабатывайте видео, генерируйте плашки
  */
 
 const { bot, initBot } = require('./bot/bot');
@@ -13,6 +14,15 @@ const {
 } = require('./handlers/commands');
 const { handleMessage } = require('./handlers/messages');
 const { handleInlineQuery } = require('./handlers/inline');
+const {
+  handleScreenshotCommand,
+  handlePhoto,
+  handleTemplateSelection,
+  handleGradientSelection,
+  handleBackToTemplates,
+  handleCancel: handleScreenshotCancel
+} = require('./handlers/screenshot');
+const db = require('./database/db');
 
 /**
  * Регистрация обработчиков команд
@@ -21,6 +31,7 @@ function registerCommandHandlers() {
   bot.onText(/\/start/, (msg) => handleStart(bot, msg));
   bot.onText(/\/help/, (msg) => handleHelp(bot, msg));
   bot.onText(/\/link/, (msg) => handleLink(bot, msg));
+  bot.onText(/\/screenshot/, (msg) => handleScreenshotCommand(bot, msg));
   bot.onText(/\/cancel/, (msg) => handleCancel(bot, msg));
 }
 
@@ -28,6 +39,10 @@ function registerCommandHandlers() {
  * Регистрация обработчиков сообщений
  */
 function registerMessageHandlers() {
+  // Обработка фото для screenshot feature
+  bot.on('photo', (msg) => handlePhoto(bot, msg));
+
+  // Общий обработчик текстовых сообщений
   bot.on('message', (msg) => handleMessage(bot, msg));
 }
 
@@ -39,10 +54,35 @@ function registerInlineHandlers() {
 }
 
 /**
+ * Регистрация обработчика callback queries
+ */
+function registerCallbackHandlers() {
+  bot.on('callback_query', async (query) => {
+    const data = query.data;
+
+    if (data.startsWith('template:')) {
+      const templateSlug = data.replace('template:', '');
+      await handleTemplateSelection(bot, query, templateSlug);
+    } else if (data.startsWith('gradient:')) {
+      const gradientSlug = data.replace('gradient:', '');
+      await handleGradientSelection(bot, query, gradientSlug);
+    } else if (data === 'back_to_templates') {
+      await handleBackToTemplates(bot, query);
+    } else if (data === 'cancel') {
+      await handleScreenshotCancel(bot, query);
+    }
+  });
+}
+
+/**
  * Главная функция запуска бота
  */
 async function main() {
-  console.log('🤖 Starting Telegram Link Bot...\n');
+  console.log('⚡ Запуск SnapKit Bot...\n');
+
+  // Инициализация базы данных
+  console.log('📊 Подключение к PostgreSQL...');
+  await db.initialize();
 
   // Инициализация бота
   await initBot();
@@ -51,12 +91,13 @@ async function main() {
   registerCommandHandlers();
   registerMessageHandlers();
   registerInlineHandlers();
+  registerCallbackHandlers();
 
-  console.log('\n✨ All handlers registered. Bot is running!\n');
+  console.log('\n✨ Все обработчики зарегистрированы. SnapKit работает!\n');
 }
 
 // Запуск бота
 main().catch((error) => {
-  console.error('❌ Failed to start bot:', error);
+  console.error('❌ Не удалось запустить бота:', error);
   process.exit(1);
 });

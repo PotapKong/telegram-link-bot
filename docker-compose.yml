@@ -1,0 +1,14 @@
+services:
+  telegram-link-bot:
+    build: .
+    env_file:
+      - .env
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - root_default
+
+networks:
+  root_default:
+    external: true

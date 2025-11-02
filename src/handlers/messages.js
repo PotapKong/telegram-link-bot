@@ -25,14 +25,14 @@ async function handleMessage(bot, msg) {
       await handleWaitingDescription(bot, msg, chatId, state);
     }
   } catch (error) {
-    console.error('Error handling message:', error);
+    console.error('❌ Ошибка при обработке сообщения:', error);
     try {
       await bot.sendMessage(
         msg.chat.id,
         '❌ Произошла ошибка. Попробуйте ещё раз или используйте /cancel для отмены.'
       );
     } catch (err) {
-      console.error('Failed to send error message:', err);
+      console.error('❌ Не удалось отправить сообщение об ошибке:', err);
     }
   }
 }

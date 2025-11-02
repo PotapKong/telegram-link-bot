@@ -1,7 +1,7 @@
 {
-  "name": "telegram-link-bot",
+  "name": "snapkit-bot",
   "version": "2.0.0",
-  "description": "Telegram bot for converting links to share links with descriptions",
+  "description": "SnapKit - мгновенный набор инструментов для контента. Создавайте share-ссылки, обрабатывайте видео, генерируйте плашки за секунды.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -10,12 +10,18 @@
   "keywords": [
     "telegram",
     "bot",
-    "link",
-    "share"
+    "snapkit",
+    "share",
+    "content",
+    "media",
+    "link"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "node-telegram-bot-api": "^0.61.0"
+    "node-telegram-bot-api": "^0.61.0",
+    "pg": "^8.11.3",
+    "canvas": "^2.11.2",
+    "axios": "^1.6.2"
   }
 }
