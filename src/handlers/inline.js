@@ -1,12 +1,9 @@
-/**
- * Обработчик inline-запросов с поддержкой команд
- */
-
 const {
   extractTelegramLink,
   makeShareLink,
   isValidTelegramLink
 } = require('../utils/linkUtils');
+const { generateScreenshotInline } = require('./screenshot');
 
 /**
  * Обработка inline-запросов
@@ -33,6 +30,28 @@ async function handleInlineQuery(bot, query) {
       // Убираем команду "link" из запроса
       const linkQuery = parts.slice(1).join(' ');
       return await handleLinkCommand(bot, query, linkQuery);
+    }
+
+    if (command === 'screenshot') {
+      // Убираем команду "screenshot" из запроса
+      const screenshotParams = parts.slice(1).join(' ');
+      try {
+        const screenshotResult = await generateScreenshotInline(screenshotParams);
+        await bot.answerInlineQuery(query.id, [screenshotResult], { cache_time: 0 });
+        return;
+      } catch (error) {
+        console.error('Ошибка в inline screenshot:', error);
+        const fallbackResult = {
+          type: 'article',
+          id: 'error',
+          title: 'Ошибка создания скриншота',
+          input_message_content: {
+            message_text: 'Не удалось создать скриншот. Попробуйте позже.'
+          }
+        };
+        await bot.answerInlineQuery(query.id, [fallbackResult]);
+        return;
+      }
     }
 
     // Если команда не найдена, обрабатываем как обычную ссылку
@@ -75,6 +94,8 @@ async function showMainMenu(bot, query) {
 🎯 Быстрый режим (без команды):
    @snapkit_bot https://t.me/... Описание
 
+🖼 screenshot — Создать оформленный скриншот
+
 Щелк — и готово! 🚀`
       }
     },
@@ -90,6 +111,7 @@ async function showMainMenu(bot, query) {
 • @snapkit_bot help
 • @snapkit_bot link https://t.me/channel/123
 • @snapkit_bot https://t.me/durov/123 Пост
+• @snapkit_bot screenshot <параметры>
 
 Скоро:
 • @snapkit_bot video <url>
@@ -132,10 +154,14 @@ async function handleHelpCommand(bot, query) {
 @snapkit_bot <url> <описание>
 Быстрый режим (без команды "link")
 
+🖼 screenshot <параметры>
+Создать оформленный скриншот
+
 🎯 Примеры:
 @snapkit_bot help
 @snapkit_bot link https://t.me/durov/123 Пост
 @snapkit_bot https://t.me/telegram/456 Новости
+@snapkit_bot screenshot style=mac color=blue
 
 🔮 Скоро появится:
 • video — обработка видео
@@ -164,6 +190,9 @@ async function handleHelpCommand(bot, query) {
 
 Справка:
 @snapkit_bot help
+
+🖼 Создать оформленный скриншот:
+@snapkit_bot screenshot style=mac color=blue
 
 💡 Копируйте и вставляйте в любой чат!`
       }
