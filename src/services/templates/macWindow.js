@@ -1,153 +1,263 @@
 /**
- * Шаблон в стиле окна macOS (улучшенная версия)
+ * Mac Window шаблон (Sharp версия - стильный современный дизайн)
+ *
+ * Особенности:
+ * - SVG-based рендеринг для идеальной чёткости
+ * - Реалистичные кнопки с градиентами и бликами
+ * - Современный title bar с градиентом
+ * - Мягкая тень с gaussian blur
+ * - Минималистичный дизайн в стиле macOS Sonoma/Sequoia
  */
 
-const { createCanvas } = require('canvas');
-const { applyGradient, drawRoundedRect } = require('../../utils/canvasUtils');
+const sharp = require('sharp');
+const { createBackground } = require('../backgrounds/backgroundFactory');
 
 /**
  * Применить Mac Window шаблон
+ *
+ * @param {Buffer} imageBuffer - Исходное изображение
+ * @param {Object} backgroundConfig - Конфигурация фона (type + config)
+ * @param {Object} config - Общие настройки (radius, shadow, padding)
+ * @param {Object} templateSettings - Настройки шаблона (windowButtons)
+ * @returns {Promise<Buffer>} Обработанное изображение
  */
-async function apply(originalImage, gradient, config, templateSettings) {
-  const TITLE_BAR_HEIGHT = 52; // Увеличен для более современного вида
-  const WINDOW_PADDING = 24; // Увеличен паддинг
-  const WINDOW_RADIUS = 20; // Больше скругление для стильности
+async function apply(imageBuffer, backgroundConfig, config, templateSettings = {}) {
+  // Константы дизайна (современный macOS)
+  const TITLE_BAR_HEIGHT = 52;
+  const WINDOW_PADDING = 24;
+  const WINDOW_RADIUS = 20;
+  const BUTTON_RADIUS = 7;
+  const BUTTON_SPACING = 9;
+  const PADDING = config.padding || 60;
 
-  // Размеры окна
-  const windowWidth = originalImage.width + (WINDOW_PADDING * 2);
-  const windowHeight = originalImage.height + TITLE_BAR_HEIGHT + (WINDOW_PADDING * 2);
+  try {
+    // 1. Получить размеры исходного изображения
+    const imageMetadata = await sharp(imageBuffer).metadata();
+    const imageWidth = imageMetadata.width;
+    const imageHeight = imageMetadata.height;
 
-  // Размеры финального холста с отступами
-  const canvasWidth = windowWidth + (config.padding * 2);
-  const canvasHeight = windowHeight + (config.padding * 2);
+    // 2. Размеры окна
+    const windowWidth = imageWidth + (WINDOW_PADDING * 2);
+    const windowHeight = imageHeight + TITLE_BAR_HEIGHT + (WINDOW_PADDING * 2);
 
-  const canvas = createCanvas(canvasWidth, canvasHeight);
-  const ctx = canvas.getContext('2d');
+    // 3. Размеры холста
+    const canvasWidth = windowWidth + (PADDING * 2);
+    const canvasHeight = windowHeight + (PADDING * 2);
 
-  // 1. Нарисовать градиентный фон
-  ctx.fillStyle = applyGradient(ctx, gradient, canvasWidth, canvasHeight);
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    // 4. Создать фон
+    const background = await createBackground(
+      backgroundConfig.type,
+      canvasWidth,
+      canvasHeight,
+      backgroundConfig.config
+    );
 
-  // Позиция окна на холсте (с учётом отступов)
-  const windowX = config.padding;
-  const windowY = config.padding;
+    // 5. Позиция окна на холсте
+    const windowX = PADDING;
+    const windowY = PADDING;
 
-  // 2. Нарисовать мягкую тень окна (более реалистичная)
-  ctx.shadowBlur = config.shadow.blur * 1.2;
-  ctx.shadowOffsetX = config.shadow.offsetX;
-  ctx.shadowOffsetY = config.shadow.offsetY + 5;
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+    // 6. Создать SVG окна с тенью, title bar и кнопками
+    const windowSvg = `
+      <svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Тень окна -->
+          <filter id="windowShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="${config.shadow?.blur || 30}"/>
+            <feOffset dx="${config.shadow?.offsetX || 0}" dy="${config.shadow?.offsetY + 5 || 15}" result="offsetblur"/>
+            <feComponentTransfer>
+              <feFuncA type="linear" slope="0.25"/>
+            </feComponentTransfer>
+            <feMerge>
+              <feMergeNode/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
 
-  // 3. Нарисовать фон окна (светло-серый для современности)
-  ctx.fillStyle = '#F6F6F6';
-  drawRoundedRect(ctx, windowX, windowY, windowWidth, windowHeight, WINDOW_RADIUS);
-  ctx.fill();
+          <!-- Градиент title bar -->
+          <linearGradient id="titleBarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#EBEBEB" />
+            <stop offset="100%" stop-color="#D5D5D5" />
+          </linearGradient>
 
-  // Сбросить тень
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
+          <!-- Градиенты для кнопок -->
+          <radialGradient id="redButtonGrad" cx="50%" cy="30%">
+            <stop offset="0%" stop-color="#FF6B68" />
+            <stop offset="100%" stop-color="#FF5F56" />
+          </radialGradient>
+          <radialGradient id="yellowButtonGrad" cx="50%" cy="30%">
+            <stop offset="0%" stop-color="#FFC941" />
+            <stop offset="100%" stop-color="#FFBD2E" />
+          </radialGradient>
+          <radialGradient id="greenButtonGrad" cx="50%" cy="30%">
+            <stop offset="0%" stop-color="#2DD14C" />
+            <stop offset="100%" stop-color="#27C93F" />
+          </radialGradient>
 
-  // 4. Нарисовать title bar (современный градиент)
-  ctx.save();
-  drawRoundedRect(ctx, windowX, windowY, windowWidth, windowHeight, WINDOW_RADIUS);
-  ctx.clip();
+          <!-- Блик для кнопок -->
+          <radialGradient id="buttonHighlight" cx="50%" cy="20%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.5)" />
+            <stop offset="70%" stop-color="rgba(255,255,255,0.1)" />
+            <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+          </radialGradient>
+        </defs>
 
-  const titleGradient = ctx.createLinearGradient(
-    windowX, windowY,
-    windowX, windowY + TITLE_BAR_HEIGHT
-  );
-  titleGradient.addColorStop(0, '#EBEBEB');
-  titleGradient.addColorStop(1, '#D5D5D5');
+        <!-- Фон окна с тенью -->
+        <rect
+          x="${windowX}"
+          y="${windowY}"
+          width="${windowWidth}"
+          height="${windowHeight}"
+          rx="${WINDOW_RADIUS}"
+          fill="#F6F6F6"
+          filter="url(#windowShadow)"
+        />
 
-  ctx.fillStyle = titleGradient;
-  ctx.fillRect(windowX, windowY, windowWidth, TITLE_BAR_HEIGHT);
+        <!-- Title bar -->
+        <rect
+          x="${windowX}"
+          y="${windowY}"
+          width="${windowWidth}"
+          height="${TITLE_BAR_HEIGHT}"
+          rx="${WINDOW_RADIUS}"
+          fill="url(#titleBarGradient)"
+        />
+        <!-- Перекрыть нижние углы title bar -->
+        <rect
+          x="${windowX}"
+          y="${windowY + TITLE_BAR_HEIGHT - WINDOW_RADIUS}"
+          width="${windowWidth}"
+          height="${WINDOW_RADIUS}"
+          fill="url(#titleBarGradient)"
+        />
 
-  // Тонкая светлая линия сверху (блик)
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(windowX + WINDOW_RADIUS, windowY + 1);
-  ctx.lineTo(windowX + windowWidth - WINDOW_RADIUS, windowY + 1);
-  ctx.stroke();
+        <!-- Верхний блик на title bar -->
+        <line
+          x1="${windowX + WINDOW_RADIUS}"
+          y1="${windowY + 1.5}"
+          x2="${windowX + windowWidth - WINDOW_RADIUS}"
+          y2="${windowY + 1.5}"
+          stroke="rgba(255,255,255,0.6)"
+          stroke-width="1"
+          stroke-linecap="round"
+        />
 
-  // Линия под title bar (более контрастная)
-  ctx.strokeStyle = '#B8B8B8';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(windowX, windowY + TITLE_BAR_HEIGHT);
-  ctx.lineTo(windowX + windowWidth, windowY + TITLE_BAR_HEIGHT);
-  ctx.stroke();
+        <!-- Линия под title bar -->
+        <line
+          x1="${windowX}"
+          y1="${windowY + TITLE_BAR_HEIGHT}"
+          x2="${windowX + windowWidth}"
+          y2="${windowY + TITLE_BAR_HEIGHT}"
+          stroke="#B8B8B8"
+          stroke-width="1"
+        />
 
-  ctx.restore();
+        ${templateSettings.windowButtons !== false ? `
+        <!-- Кнопки окна -->
+        <g>
+          <!-- Красная кнопка (Close) -->
+          <circle
+            cx="${windowX + 20}"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
+            r="${BUTTON_RADIUS}"
+            fill="url(#redButtonGrad)"
+            filter="drop-shadow(0 1px 2px rgba(0,0,0,0.15))"
+          />
+          <circle
+            cx="${windowX + 20}"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
+            r="${BUTTON_RADIUS}"
+            fill="url(#buttonHighlight)"
+          />
 
-  // 5. Нарисовать кнопки окна (более крупные и современные)
-  if (templateSettings.windowButtons !== false) {
-    const buttonRadius = 7; // Увеличены кнопки
-    const buttonSpacing = 9;
-    const buttonY = windowY + TITLE_BAR_HEIGHT / 2;
-    const buttonStartX = windowX + 20;
+          <!-- Жёлтая кнопка (Minimize) -->
+          <circle
+            cx="${windowX + 20 + (BUTTON_RADIUS * 2 + BUTTON_SPACING)}"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
+            r="${BUTTON_RADIUS}"
+            fill="url(#yellowButtonGrad)"
+            filter="drop-shadow(0 1px 2px rgba(0,0,0,0.15))"
+          />
+          <circle
+            cx="${windowX + 20 + (BUTTON_RADIUS * 2 + BUTTON_SPACING)}"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
+            r="${BUTTON_RADIUS}"
+            fill="url(#buttonHighlight)"
+          />
 
-    // Функция для рисования кнопки с тенью
-    const drawButton = (x, y, color, hoverColor) => {
-      // Внутренняя тень
-      ctx.shadowBlur = 3;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 1;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+          <!-- Зелёная кнопка (Maximize) -->
+          <circle
+            cx="${windowX + 20 + (BUTTON_RADIUS * 2 + BUTTON_SPACING) * 2}"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
+            r="${BUTTON_RADIUS}"
+            fill="url(#greenButtonGrad)"
+            filter="drop-shadow(0 1px 2px rgba(0,0,0,0.15))"
+          />
+          <circle
+            cx="${windowX + 20 + (BUTTON_RADIUS * 2 + BUTTON_SPACING) * 2}"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
+            r="${BUTTON_RADIUS}"
+            fill="url(#buttonHighlight)"
+          />
+        </g>
+        ` : ''}
+      </svg>
+    `;
 
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, buttonRadius, 0, Math.PI * 2);
-      ctx.fill();
+    // 7. Позиция скриншота внутри окна
+    const screenshotX = windowX + WINDOW_PADDING;
+    const screenshotY = windowY + TITLE_BAR_HEIGHT + WINDOW_PADDING;
 
-      // Блик сверху
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
+    // 8. Создать белый фон под скриншот (округлённый)
+    const imageBackgroundSvg = `
+      <svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
+        <rect
+          x="${screenshotX}"
+          y="${screenshotY}"
+          width="${imageWidth}"
+          height="${imageHeight}"
+          rx="8"
+          fill="#FFFFFF"
+        />
+      </svg>
+    `;
 
-      const highlight = ctx.createRadialGradient(x, y - 2, 0, x, y, buttonRadius);
-      highlight.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-      highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = highlight;
-      ctx.beginPath();
-      ctx.arc(x, y, buttonRadius, 0, Math.PI * 2);
-      ctx.fill();
-    };
+    // 9. Обрезать углы скриншота
+    const roundedScreenshot = await sharp(imageBuffer)
+      .resize(imageWidth, imageHeight, { fit: 'contain' })
+      .composite([
+        {
+          input: Buffer.from(`
+            <svg width="${imageWidth}" height="${imageHeight}">
+              <rect width="${imageWidth}" height="${imageHeight}" rx="8" fill="white"/>
+            </svg>
+          `),
+          blend: 'dest-in'
+        }
+      ])
+      .png()
+      .toBuffer();
 
-    // Красная кнопка (закрыть)
-    drawButton(buttonStartX, buttonY, '#FF5F56', '#FF6259');
+    // 10. Composite всех слоёв
+    const result = await sharp(background)
+      .composite([
+        // Окно с тенью и title bar
+        { input: Buffer.from(windowSvg), top: 0, left: 0 },
+        // Белый фон под скриншот
+        { input: Buffer.from(imageBackgroundSvg), top: 0, left: 0 },
+        // Скриншот с округлёнными углами
+        { input: roundedScreenshot, top: screenshotY, left: screenshotX }
+      ])
+      .png()
+      .toBuffer();
 
-    // Жёлтая кнопка (свернуть)
-    drawButton(buttonStartX + (buttonRadius * 2 + buttonSpacing), buttonY, '#FFBD2E', '#FFC12F');
+    return result;
 
-    // Зелёная кнопка (развернуть)
-    drawButton(buttonStartX + (buttonRadius * 2 + buttonSpacing) * 2, buttonY, '#27C93F', '#28CD41');
-
-    // Сбросить тень после кнопок
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
+  } catch (error) {
+    console.error('❌ Ошибка Mac Window шаблона:', error);
+    throw new Error(`Не удалось применить Mac Window шаблон: ${error.message}`);
   }
-
-  // 6. Нарисовать скриншот
-  ctx.save();
-  const imageX = windowX + WINDOW_PADDING;
-  const imageY = windowY + TITLE_BAR_HEIGHT + WINDOW_PADDING;
-
-  // Обрезать углы скриншота (уменьшенное скругление для контента)
-  const imageRadius = 8;
-  drawRoundedRect(ctx, imageX, imageY, originalImage.width, originalImage.height, imageRadius);
-  ctx.clip();
-
-  // Белый фон под изображением
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(imageX, imageY, originalImage.width, originalImage.height);
-
-  ctx.drawImage(originalImage, imageX, imageY);
-  ctx.restore();
-
-  return canvas.toBuffer('image/png');
 }
 
-module.exports = { apply };
+module.exports = {
+  apply
+};
