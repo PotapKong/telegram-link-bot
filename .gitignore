@@ -32,3 +32,4 @@ temp/
 # Test files
 coverage/
 .nyc_output/
+test-output/
