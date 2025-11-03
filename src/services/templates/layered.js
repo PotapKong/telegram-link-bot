@@ -1,121 +1,163 @@
 /**
- * Шаблон с несколькими полупрозрачными слоями (улучшенная версия)
- * Основной слой 100% непрозрачный на переднем плане
- * Задние слои выглядывают из-за него, становясь меньше и прозрачнее
+ * Layered шаблон на Sharp
+ * 3 полупрозрачных слоя сзади, каждый меньше предыдущего, смещение вверх
  */
 
-const { createCanvas } = require('canvas');
-const { applyGradient, drawRoundedRect } = require('../../utils/canvasUtils');
+const sharp = require('sharp');
+const { createBackground } = require('../backgrounds/backgroundFactory');
 
 /**
  * Применить Layered шаблон
+ *
+ * @param {Buffer} imageBuffer - Исходное изображение
+ * @param {Object} backgroundConfig - Конфигурация фона (type + config)
+ * @param {Object} config - Общие настройки (radius, shadow, padding)
+ * @param {Object} templateSettings - Настройки шаблона (outputSize)
+ * @returns {Promise<Buffer>} Обработанное изображение
  */
-async function apply(originalImage, gradient, config, templateSettings) {
-  const numLayers = templateSettings.layers || 3;
-  const LAYER_OFFSET_X = 18; // Смещение каждого слоя вправо
-  const LAYER_OFFSET_Y = 18; // Смещение каждого слоя вниз
-  const LAYER_SCALE_STEP = 0.03; // На сколько каждый слой больше (3%)
+async function apply(imageBuffer, backgroundConfig, config, templateSettings = {}) {
+  // Размер итогового изображения (по умолчанию 1080x1080)
+  const finalWidth = templateSettings.outputWidth || 1080;
+  const finalHeight = templateSettings.outputHeight || 1080;
 
-  // Базовые настройки для основного слоя
-  const mainLayerRadius = config.radius || 16;
+  try {
+    // 1. Получить метаданные скриншота
+    const screenshot = sharp(imageBuffer);
+    const metadata = await screenshot.metadata();
 
-  // Рассчитать размеры холста с учётом всех слоёв
-  // Задние слои будут выглядывать справа-снизу
-  const totalOffsetX = LAYER_OFFSET_X * (numLayers - 1);
-  const totalOffsetY = LAYER_OFFSET_Y * (numLayers - 1);
+    // 2. Вычислить размер основного слоя (80% от финального размера)
+    const mainLayerWidth = Math.round(finalWidth * 0.8);
+    const mainLayerHeight = Math.round(finalHeight * 0.8);
 
-  const canvasWidth = originalImage.width + totalOffsetX + (config.padding * 2);
-  const canvasHeight = originalImage.height + totalOffsetY + (config.padding * 2);
+    // 3. Масштабировать скриншот до размера основного слоя (contain)
+    const mainLayerBuffer = await screenshot
+      .resize(mainLayerWidth, mainLayerHeight, {
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
+      })
+      .png()
+      .toBuffer();
 
-  const canvas = createCanvas(canvasWidth, canvasHeight);
-  const ctx = canvas.getContext('2d');
+    const mainLayerMeta = await sharp(mainLayerBuffer).metadata();
+    const actualMainWidth = mainLayerMeta.width;
+    const actualMainHeight = mainLayerMeta.height;
 
-  // 1. Нарисовать градиентный фон
-  ctx.fillStyle = applyGradient(ctx, gradient, canvasWidth, canvasHeight);
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    // 4. Создать 3 задних слоя - каждый меньше предыдущего
+    const backLayers = [];
+    const layerScales = [0.95, 0.90, 0.85]; // Каждый слой на 5% меньше
+    const layerOpacities = [0.3, 0.2, 0.1]; // От ближнего к дальнему
+    const offsetY = -30; // Смещение вверх на 30px для каждого слоя
 
-  // Позиция основного слоя (на переднем плане, сверху-слева)
-  const mainX = config.padding;
-  const mainY = config.padding;
+    for (let i = 0; i < 3; i++) {
+      const scale = layerScales[i];
+      const opacity = layerOpacities[i];
+      const layerWidth = Math.round(actualMainWidth * scale);
+      const layerHeight = Math.round(actualMainHeight * scale);
 
-  // 2. Нарисовать задние слои (от самого дальнего к ближнему)
-  for (let i = numLayers - 1; i >= 1; i--) {
-    const layerIndex = i; // 1, 2, 3...
+      // Создать SVG прямоугольника с закругленными углами и полупрозрачностью
+      const layerSvg = Buffer.from(`
+        <svg width="${layerWidth}" height="${layerHeight}">
+          <defs>
+            <filter id="shadow${i}">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="15"/>
+              <feOffset dx="0" dy="10" result="offsetblur"/>
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3"/>
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <rect
+            width="${layerWidth}"
+            height="${layerHeight}"
+            rx="20"
+            ry="20"
+            fill="white"
+            opacity="${opacity}"
+            filter="url(#shadow${i})"
+          />
+        </svg>
+      `);
 
-    // Каждый задний слой:
-    // - Смещён вправо-вниз от основного
-    // - Немного больше предыдущего (чтобы выглядывал)
-    // - Более прозрачный
+      backLayers.push({
+        input: await sharp(layerSvg).png().toBuffer(),
+        width: layerWidth,
+        height: layerHeight,
+        opacity: opacity,
+        offsetY: offsetY * (i + 1) // Смещение вверх: -30, -60, -90
+      });
+    }
 
-    const layerOffsetX = LAYER_OFFSET_X * layerIndex;
-    const layerOffsetY = LAYER_OFFSET_Y * layerIndex;
-    const layerScale = 1 + (LAYER_SCALE_STEP * layerIndex); // Увеличиваем размер
+    // 5. Создать фон
+    let backgroundBuffer;
+    if (backgroundConfig.type === 'blur') {
+      // Для blur фона передаём исходный скриншот
+      backgroundBuffer = await createBackground(
+        backgroundConfig.type,
+        finalWidth,
+        finalHeight,
+        { ...backgroundConfig.config, sourceImage: imageBuffer }
+      );
+    } else {
+      backgroundBuffer = await createBackground(
+        backgroundConfig.type,
+        finalWidth,
+        finalHeight,
+        backgroundConfig.config
+      );
+    }
 
-    const layerWidth = originalImage.width * layerScale;
-    const layerHeight = originalImage.height * layerScale;
+    // 6. Вычислить позиции для центрирования
+    // Центр финального изображения
+    const centerX = Math.round(finalWidth / 2);
+    const centerY = Math.round(finalHeight / 2);
 
-    // Позиция слоя (выглядывает справа-снизу)
-    const layerX = mainX + layerOffsetX - (layerWidth - originalImage.width) / 2;
-    const layerY = mainY + layerOffsetY - (layerHeight - originalImage.height) / 2;
+    // Позиция основного слоя (центр)
+    const mainLayerLeft = Math.round(centerX - actualMainWidth / 2);
+    const mainLayerTop = Math.round(centerY - actualMainHeight / 2);
 
-    // Прозрачность: чем дальше слой, тем прозрачнее
-    const opacity = 0.15 + (0.15 * (1 - layerIndex / numLayers)); // От 0.15 до 0.3
+    // 7. Составить массив композита (от дальнего к ближнему)
+    const compositeArray = [];
 
-    ctx.save();
-    ctx.globalAlpha = opacity;
+    // Задние слои (от дальнего к ближнему: слой 2, 1, 0)
+    for (let i = backLayers.length - 1; i >= 0; i--) {
+      const layer = backLayers[i];
+      const layerLeft = Math.round(centerX - layer.width / 2);
+      const layerTop = Math.round(centerY - layer.height / 2) + layer.offsetY;
 
-    // Нарисовать тень для слоя
-    ctx.shadowBlur = 15;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 5;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      compositeArray.push({
+        input: layer.input,
+        top: layerTop,
+        left: layerLeft
+      });
+    }
 
-    // Фон слоя (белый)
-    ctx.fillStyle = '#FFFFFF';
-    drawRoundedRect(ctx, layerX, layerY, layerWidth, layerHeight, mainLayerRadius * layerScale);
-    ctx.fill();
+    // Основной слой (самый верхний)
+    compositeArray.push({
+      input: mainLayerBuffer,
+      top: mainLayerTop,
+      left: mainLayerLeft
+    });
 
-    ctx.restore();
+    // 8. Собрать итоговое изображение
+    const result = await sharp(backgroundBuffer)
+      .composite(compositeArray)
+      .png()
+      .toBuffer();
+
+    console.log(`✅ Layered шаблон: ${finalWidth}x${finalHeight}, основной слой ${actualMainWidth}x${actualMainHeight}, 3 задних слоя`);
+
+    return result;
+
+  } catch (error) {
+    console.error('❌ Ошибка генерации Layered шаблона:', error);
+    throw new Error(`Не удалось создать Layered шаблон: ${error.message}`);
   }
-
-  // 3. Нарисовать основной слой (100% непрозрачный, на переднем плане)
-  ctx.save();
-  ctx.globalAlpha = 1.0;
-
-  // Мягкая тень для основного слоя
-  ctx.shadowBlur = config.shadow.blur;
-  ctx.shadowOffsetX = config.shadow.offsetX;
-  ctx.shadowOffsetY = config.shadow.offsetY;
-  ctx.shadowColor = config.shadow.color;
-
-  // Фон основного слоя (белый)
-  ctx.fillStyle = '#FFFFFF';
-  drawRoundedRect(ctx, mainX, mainY, originalImage.width, originalImage.height, mainLayerRadius);
-  ctx.fill();
-
-  // Сбросить тень перед рисованием изображения
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-
-  // Обрезать углы для изображения
-  drawRoundedRect(ctx, mainX, mainY, originalImage.width, originalImage.height, mainLayerRadius);
-  ctx.clip();
-
-  // Нарисовать само изображение
-  ctx.drawImage(originalImage, mainX, mainY);
-
-  ctx.restore();
-
-  // 4. Добавить тонкую обводку основному слою для чёткости
-  ctx.save();
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
-  ctx.lineWidth = 1;
-  drawRoundedRect(ctx, mainX, mainY, originalImage.width, originalImage.height, mainLayerRadius);
-  ctx.stroke();
-  ctx.restore();
-
-  return canvas.toBuffer('image/png');
 }
 
-module.exports = { apply };
+module.exports = {
+  apply
+};
