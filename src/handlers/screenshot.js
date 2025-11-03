@@ -191,11 +191,20 @@ async function handleGradientSelection(bot, query, gradientSlug) {
 
     await bot.answerCallbackQuery(query.id);
 
+    // Создать backgroundConfig из градиента
+    const backgroundConfig = {
+      type: 'gradient',
+      config: {
+        colors: gradient.colors,
+        angle: gradient.angle || 135
+      }
+    };
+
     // Обработать скриншот
     const result = await imageProcessor.processScreenshot(
       state.imageBuffer,
       state.template,
-      gradient,
+      backgroundConfig,
       {
         radius: 12,
         shadow: {
