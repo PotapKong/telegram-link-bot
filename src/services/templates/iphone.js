@@ -1,185 +1,215 @@
 /**
- * Шаблон iPhone mockup (улучшенная версия - iPhone 17 Pro Max)
+ * iPhone 17 Pro шаблон (Sharp версия - реалистичный дизайн)
+ *
+ * Особенности:
+ * - Точные пропорции iPhone 17 Pro Max (2.16:1)
+ * - Titanium корпус с металлическим градиентом
+ * - Dynamic Island (фирменный вырез)
+ * - Cover режим для скриншотов (заполнение экрана)
+ * - Фиксированный размер 650px для консистентности
+ * - SVG-based рендеринг для идеальной чёткости
  */
 
-const { createCanvas } = require('canvas');
-const { applyGradient, drawRoundedRect } = require('../../utils/canvasUtils');
+const sharp = require('sharp');
+const { createBackground } = require('../backgrounds/backgroundFactory');
 
 /**
- * Применить iPhone mockup шаблон
+ * Применить iPhone 17 Pro шаблон
+ *
+ * @param {Buffer} imageBuffer - Исходное изображение
+ * @param {Object} backgroundConfig - Конфигурация фона (type + config)
+ * @param {Object} config - Общие настройки (radius, shadow, padding)
+ * @param {Object} templateSettings - Настройки шаблона (deviceColor)
+ * @returns {Promise<Buffer>} Обработанное изображение
  */
-async function apply(originalImage, gradient, config, templateSettings) {
-  // Пропорции iPhone 17 Pro Max: примерно 19.5:9
-  const PHONE_ASPECT_RATIO = 2.16; // высота / ширина (реальное соотношение iPhone)
-  const DEVICE_BEZEL = 16; // Более реалистичная рамка
-  const DEVICE_RADIUS = 60; // Скругления как у iPhone 17 Pro
-  const SCREEN_RADIUS = 52; // Скругление экрана
-  const NOTCH_WIDTH = 135; // Dynamic Island
-  const NOTCH_HEIGHT = 40;
-  const HOME_INDICATOR_WIDTH = 150;
-  const HOME_INDICATOR_HEIGHT = 5;
-  const HOME_INDICATOR_MARGIN = 12;
+async function apply(imageBuffer, backgroundConfig, config, templateSettings = {}) {
+  // Константы iPhone 17 Pro Max
+  const PHONE_WIDTH = 650;  // Фиксированный размер
+  const PHONE_ASPECT_RATIO = 2.16;  // Пропорции iPhone 17 Pro Max
+  const PHONE_HEIGHT = Math.round(PHONE_WIDTH * PHONE_ASPECT_RATIO);
 
-  const deviceColor = templateSettings.deviceColor || 'titanium'; // По умолчанию титан
+  const DEVICE_BEZEL = 16;  // Толщина рамки
+  const DEVICE_RADIUS = 60;  // Скругление корпуса
+  const SCREEN_RADIUS = 52;  // Скругление экрана
 
-  // Рассчитать размеры телефона с правильными пропорциями
-  // Если изображение не вертикальное - масштабируем его
-  let displayWidth, displayHeight;
-  let imageScale = 1;
+  const DYNAMIC_ISLAND_WIDTH = 120;
+  const DYNAMIC_ISLAND_HEIGHT = 37;
+  const DYNAMIC_ISLAND_MARGIN_TOP = 12;
 
-  // Целевая ширина телефона - чуть больше ширины изображения для красоты
-  const targetPhoneWidth = Math.min(originalImage.width * 1.2, 450);
-  const targetPhoneHeight = targetPhoneWidth * PHONE_ASPECT_RATIO;
+  const PADDING = config.padding || 80;
 
-  // Размеры экрана (внутри bezel)
-  displayWidth = targetPhoneWidth;
-  displayHeight = targetPhoneHeight;
+  // Цвет корпуса (по умолчанию Titanium)
+  const deviceColor = templateSettings.deviceColor || 'titanium';
 
-  // Размеры всего устройства
-  const deviceWidth = displayWidth + (DEVICE_BEZEL * 2);
-  const deviceHeight = displayHeight + (DEVICE_BEZEL * 2);
+  try {
+    // 1. Размеры экрана
+    const screenWidth = PHONE_WIDTH;
+    const screenHeight = PHONE_HEIGHT;
 
-  // Размеры финального холста с отступами
-  const canvasWidth = deviceWidth + (config.padding * 2);
-  const canvasHeight = deviceHeight + (config.padding * 2);
+    // 2. Размеры устройства (с рамкой)
+    const deviceWidth = screenWidth + (DEVICE_BEZEL * 2);
+    const deviceHeight = screenHeight + (DEVICE_BEZEL * 2);
 
-  const canvas = createCanvas(canvasWidth, canvasHeight);
-  const ctx = canvas.getContext('2d');
+    // 3. Размеры холста
+    const canvasWidth = deviceWidth + (PADDING * 2);
+    const canvasHeight = deviceHeight + (PADDING * 2);
 
-  // 1. Нарисовать градиентный фон
-  ctx.fillStyle = applyGradient(ctx, gradient, canvasWidth, canvasHeight);
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    // 4. Создать фон
+    const background = await createBackground(
+      backgroundConfig.type,
+      canvasWidth,
+      canvasHeight,
+      backgroundConfig.config
+    );
 
-  // Позиция устройства на холсте
-  const deviceX = config.padding;
-  const deviceY = config.padding;
+    // 5. Позиция устройства
+    const deviceX = PADDING;
+    const deviceY = PADDING;
 
-  // 2. Нарисовать тень устройства (более мягкая и реалистичная)
-  ctx.shadowBlur = config.shadow.blur * 1.5;
-  ctx.shadowOffsetX = config.shadow.offsetX;
-  ctx.shadowOffsetY = config.shadow.offsetY + 8;
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+    // 6. Цвета корпуса
+    let frameColor, highlightColor;
+    if (deviceColor === 'titanium') {
+      frameColor = '#2C2C2E';
+      highlightColor = '#505050';
+    } else if (deviceColor === 'black') {
+      frameColor = '#1C1C1E';
+      highlightColor = '#3C3C3E';
+    } else if (deviceColor === 'natural') {
+      frameColor = '#D4A574';  // Рыжий (Desert Titanium)
+      highlightColor = '#E5B685';
+    } else {
+      frameColor = '#2C2C2E';  // По умолчанию titanium
+      highlightColor = '#505050';
+    }
 
-  // 3. Нарисовать корпус устройства с реалистичными цветами
-  let frameColor;
-  if (deviceColor === 'white' || deviceColor === 'silver') {
-    frameColor = '#E5E5E5';
-  } else if (deviceColor === 'gold') {
-    frameColor = '#F5D3A0';
-  } else if (deviceColor === 'titanium' || deviceColor === 'natural') {
-    frameColor = '#505050';
-  } else {
-    frameColor = '#1C1C1E'; // black
+    // 7. Создать SVG корпуса iPhone с тенью и Dynamic Island
+    const deviceSvg = `
+      <svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Тень устройства -->
+          <filter id="deviceShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="${config.shadow?.blur * 1.5 || 40}"/>
+            <feOffset dx="${config.shadow?.offsetX || 0}" dy="${config.shadow?.offsetY + 10 || 20}" result="offsetblur"/>
+            <feComponentTransfer>
+              <feFuncA type="linear" slope="0.35"/>
+            </feComponentTransfer>
+            <feMerge>
+              <feMergeNode/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <!-- Градиент корпуса (металлический эффект) -->
+          <linearGradient id="frameGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="${frameColor}" />
+            <stop offset="50%" stop-color="${highlightColor}" />
+            <stop offset="100%" stop-color="${frameColor}" />
+          </linearGradient>
+
+          <!-- Блик на рамке -->
+          <linearGradient id="bezelHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.1)" />
+            <stop offset="50%" stop-color="rgba(255,255,255,0.25)" />
+            <stop offset="100%" stop-color="rgba(255,255,255,0.1)" />
+          </linearGradient>
+        </defs>
+
+        <!-- Корпус устройства -->
+        <rect
+          x="${deviceX}"
+          y="${deviceY}"
+          width="${deviceWidth}"
+          height="${deviceHeight}"
+          rx="${DEVICE_RADIUS}"
+          fill="url(#frameGradient)"
+          filter="url(#deviceShadow)"
+        />
+
+        <!-- Металлический блик -->
+        <rect
+          x="${deviceX}"
+          y="${deviceY}"
+          width="${deviceWidth}"
+          height="${deviceHeight}"
+          rx="${DEVICE_RADIUS}"
+          fill="url(#bezelHighlight)"
+        />
+
+        <!-- Экран (чёрный фон) -->
+        <rect
+          x="${deviceX + DEVICE_BEZEL}"
+          y="${deviceY + DEVICE_BEZEL}"
+          width="${screenWidth}"
+          height="${screenHeight}"
+          rx="${SCREEN_RADIUS}"
+          fill="#000000"
+        />
+
+        <!-- Dynamic Island -->
+        <ellipse
+          cx="${deviceX + deviceWidth / 2}"
+          cy="${deviceY + DEVICE_BEZEL + DYNAMIC_ISLAND_MARGIN_TOP + DYNAMIC_ISLAND_HEIGHT / 2}"
+          rx="${DYNAMIC_ISLAND_WIDTH / 2}"
+          ry="${DYNAMIC_ISLAND_HEIGHT / 2}"
+          fill="#0A0A0A"
+        />
+
+        <!-- Камера в Dynamic Island (маленький кружок) -->
+        <circle
+          cx="${deviceX + deviceWidth / 2 + 35}"
+          cy="${deviceY + DEVICE_BEZEL + DYNAMIC_ISLAND_MARGIN_TOP + DYNAMIC_ISLAND_HEIGHT / 2}"
+          r="4"
+          fill="#1A1A1A"
+        />
+      </svg>
+    `;
+
+    // 8. Обработать скриншот - масштабировать в режиме cover
+    const resizedScreenshot = await sharp(imageBuffer)
+      .resize(screenWidth, screenHeight, {
+        fit: 'cover',  // Заполнить экран, обрезать лишнее
+        position: 'center'
+      })
+      .toBuffer();
+
+    // 9. Обрезать углы скриншота под экран
+    const roundedScreenshot = await sharp(resizedScreenshot)
+      .composite([
+        {
+          input: Buffer.from(`
+            <svg width="${screenWidth}" height="${screenHeight}">
+              <rect width="${screenWidth}" height="${screenHeight}" rx="${SCREEN_RADIUS}" fill="white"/>
+            </svg>
+          `),
+          blend: 'dest-in'
+        }
+      ])
+      .png()
+      .toBuffer();
+
+    // 10. Позиция скриншота
+    const screenX = deviceX + DEVICE_BEZEL;
+    const screenY = deviceY + DEVICE_BEZEL;
+
+    // 11. Composite всех слоёв
+    const result = await sharp(background)
+      .composite([
+        // Корпус iPhone с тенью
+        { input: Buffer.from(deviceSvg), top: 0, left: 0 },
+        // Скриншот на экране
+        { input: roundedScreenshot, top: screenY, left: screenX }
+      ])
+      .png()
+      .toBuffer();
+
+    return result;
+
+  } catch (error) {
+    console.error('❌ Ошибка iPhone шаблона:', error);
+    throw new Error(`Не удалось применить iPhone шаблон: ${error.message}`);
   }
-
-  ctx.fillStyle = frameColor;
-  drawRoundedRect(ctx, deviceX, deviceY, deviceWidth, deviceHeight, DEVICE_RADIUS);
-  ctx.fill();
-
-  // Добавить металлический блеск на рамке
-  const bezelHighlight = ctx.createLinearGradient(
-    deviceX, deviceY,
-    deviceX + deviceWidth, deviceY
-  );
-  bezelHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-  bezelHighlight.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
-  bezelHighlight.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
-  ctx.fillStyle = bezelHighlight;
-  drawRoundedRect(ctx, deviceX, deviceY, deviceWidth, deviceHeight, DEVICE_RADIUS);
-  ctx.fill();
-
-  // Сбросить тень
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-
-  // 4. Нарисовать экран (область скриншота)
-  ctx.save();
-  const screenX = deviceX + DEVICE_BEZEL;
-  const screenY = deviceY + DEVICE_BEZEL;
-
-  drawRoundedRect(ctx, screenX, screenY, displayWidth, displayHeight, SCREEN_RADIUS);
-  ctx.clip();
-
-  // Фон экрана (чёрный)
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(screenX, screenY, displayWidth, displayHeight);
-
-  // Масштабировать и отцентровать изображение на экране
-  const imgAspect = originalImage.width / originalImage.height;
-  const screenAspect = displayWidth / displayHeight;
-
-  let drawWidth, drawHeight, drawX, drawY;
-
-  if (imgAspect > screenAspect) {
-    // Изображение шире экрана - масштабируем по высоте
-    drawHeight = displayHeight;
-    drawWidth = drawHeight * imgAspect;
-    drawX = screenX + (displayWidth - drawWidth) / 2;
-    drawY = screenY;
-  } else {
-    // Изображение выше экрана - масштабируем по ширине
-    drawWidth = displayWidth;
-    drawHeight = drawWidth / imgAspect;
-    drawX = screenX;
-    drawY = screenY + (displayHeight - drawHeight) / 2;
-  }
-
-  ctx.drawImage(originalImage, drawX, drawY, drawWidth, drawHeight);
-
-  ctx.restore();
-
-  // 5. Нарисовать Dynamic Island (современный вырез)
-  ctx.save();
-  const notchX = deviceX + deviceWidth / 2 - NOTCH_WIDTH / 2;
-  const notchY = deviceY + DEVICE_BEZEL + 12;
-
-  // Рисуем Dynamic Island с черным фоном и блеском
-  ctx.fillStyle = '#0A0A0A';
-  drawRoundedRect(ctx, notchX, notchY, NOTCH_WIDTH, NOTCH_HEIGHT, 20);
-  ctx.fill();
-
-  // Внутренний блеск
-  const islandGlow = ctx.createRadialGradient(
-    notchX + NOTCH_WIDTH / 2, notchY + NOTCH_HEIGHT / 2, 0,
-    notchX + NOTCH_WIDTH / 2, notchY + NOTCH_HEIGHT / 2, NOTCH_WIDTH / 2
-  );
-  islandGlow.addColorStop(0, 'rgba(255, 255, 255, 0.03)');
-  islandGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = islandGlow;
-  drawRoundedRect(ctx, notchX, notchY, NOTCH_WIDTH, NOTCH_HEIGHT, 20);
-  ctx.fill();
-
-  // Камера (маленький кружок справа)
-  ctx.fillStyle = '#1A1A1A';
-  ctx.beginPath();
-  ctx.arc(notchX + NOTCH_WIDTH - 25, notchY + NOTCH_HEIGHT / 2, 7, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Объектив камеры
-  ctx.fillStyle = '#0D0D0D';
-  ctx.beginPath();
-  ctx.arc(notchX + NOTCH_WIDTH - 25, notchY + NOTCH_HEIGHT / 2, 5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
-
-  // 6. Нарисовать home indicator (белая полоска внизу)
-  const indicatorX = deviceX + deviceWidth / 2 - HOME_INDICATOR_WIDTH / 2;
-  const indicatorY = deviceY + deviceHeight - DEVICE_BEZEL - HOME_INDICATOR_MARGIN - HOME_INDICATOR_HEIGHT;
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-  drawRoundedRect(
-    ctx,
-    indicatorX,
-    indicatorY,
-    HOME_INDICATOR_WIDTH,
-    HOME_INDICATOR_HEIGHT,
-    HOME_INDICATOR_HEIGHT / 2
-  );
-  ctx.fill();
-
-  return canvas.toBuffer('image/png');
 }
 
-module.exports = { apply };
+module.exports = {
+  apply
+};
