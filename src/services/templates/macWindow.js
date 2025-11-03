@@ -152,21 +152,21 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
         />
 
         ${templateSettings.windowButtons !== false ? `
-        <!-- Кнопки окна -->
+        <!-- Кнопки окна (более стильные, без двойного наложения) -->
         <g>
           <!-- Красная кнопка (Close) -->
           <circle
             cx="${windowX + 20}"
             cy="${windowY + TITLE_BAR_HEIGHT / 2}"
             r="${BUTTON_RADIUS}"
-            fill="url(#redButtonGrad)"
-            filter="drop-shadow(0 1px 2px rgba(0,0,0,0.15))"
+            fill="#FF5F57"
+            filter="drop-shadow(0 0.5px 0 rgba(255,255,255,0.5)) drop-shadow(0 1px 2px rgba(0,0,0,0.2))"
           />
           <circle
             cx="${windowX + 20}"
-            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
-            r="${BUTTON_RADIUS}"
-            fill="url(#buttonHighlight)"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2 - 0.5}"
+            r="${BUTTON_RADIUS - 1}"
+            fill="url(#redButtonGrad)"
           />
 
           <!-- Жёлтая кнопка (Minimize) -->
@@ -174,14 +174,14 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
             cx="${windowX + 20 + (BUTTON_RADIUS * 2 + BUTTON_SPACING)}"
             cy="${windowY + TITLE_BAR_HEIGHT / 2}"
             r="${BUTTON_RADIUS}"
-            fill="url(#yellowButtonGrad)"
-            filter="drop-shadow(0 1px 2px rgba(0,0,0,0.15))"
+            fill="#FFBD2E"
+            filter="drop-shadow(0 0.5px 0 rgba(255,255,255,0.5)) drop-shadow(0 1px 2px rgba(0,0,0,0.2))"
           />
           <circle
             cx="${windowX + 20 + (BUTTON_RADIUS * 2 + BUTTON_SPACING)}"
-            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
-            r="${BUTTON_RADIUS}"
-            fill="url(#buttonHighlight)"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2 - 0.5}"
+            r="${BUTTON_RADIUS - 1}"
+            fill="url(#yellowButtonGrad)"
           />
 
           <!-- Зелёная кнопка (Maximize) -->
@@ -189,14 +189,14 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
             cx="${windowX + 20 + (BUTTON_RADIUS * 2 + BUTTON_SPACING) * 2}"
             cy="${windowY + TITLE_BAR_HEIGHT / 2}"
             r="${BUTTON_RADIUS}"
-            fill="url(#greenButtonGrad)"
-            filter="drop-shadow(0 1px 2px rgba(0,0,0,0.15))"
+            fill="#28C940"
+            filter="drop-shadow(0 0.5px 0 rgba(255,255,255,0.5)) drop-shadow(0 1px 2px rgba(0,0,0,0.2))"
           />
           <circle
             cx="${windowX + 20 + (BUTTON_RADIUS * 2 + BUTTON_SPACING) * 2}"
-            cy="${windowY + TITLE_BAR_HEIGHT / 2}"
-            r="${BUTTON_RADIUS}"
-            fill="url(#buttonHighlight)"
+            cy="${windowY + TITLE_BAR_HEIGHT / 2 - 0.5}"
+            r="${BUTTON_RADIUS - 1}"
+            fill="url(#greenButtonGrad)"
           />
         </g>
         ` : ''}

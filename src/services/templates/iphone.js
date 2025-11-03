@@ -172,13 +172,31 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
       })
       .toBuffer();
 
-    // 9. Обрезать углы скриншота под экран
+    // 9. Обрезать углы скриншота под экран И вырезать Dynamic Island
+    const islandCenterX = screenWidth / 2;
+    const islandCenterY = DYNAMIC_ISLAND_MARGIN_TOP + DYNAMIC_ISLAND_HEIGHT / 2;
+
     const roundedScreenshot = await sharp(resizedScreenshot)
       .composite([
         {
           input: Buffer.from(`
             <svg width="${screenWidth}" height="${screenHeight}">
-              <rect width="${screenWidth}" height="${screenHeight}" rx="${SCREEN_RADIUS}" fill="white"/>
+              <defs>
+                <mask id="screenMask">
+                  <!-- Белый прямоугольник экрана -->
+                  <rect width="${screenWidth}" height="${screenHeight}" rx="${SCREEN_RADIUS}" fill="white"/>
+                  <!-- Чёрный эллипс Dynamic Island (вырез) -->
+                  <ellipse
+                    cx="${islandCenterX}"
+                    cy="${islandCenterY}"
+                    rx="${DYNAMIC_ISLAND_WIDTH / 2 + 2}"
+                    ry="${DYNAMIC_ISLAND_HEIGHT / 2 + 2}"
+                    fill="black"
+                  />
+                </mask>
+              </defs>
+              <!-- Применяем маску -->
+              <rect width="${screenWidth}" height="${screenHeight}" fill="white" mask="url(#screenMask)"/>
             </svg>
           `),
           blend: 'dest-in'
