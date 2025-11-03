@@ -1,8 +1,8 @@
 /**
  * Сервис обработки изображений для создания стилизованных скриншотов
+ * Использует Sharp для высокопроизводительной обработки изображений
  */
 
-const { loadImage } = require('canvas');
 const macWindowTemplate = require('./templates/macWindow');
 const iphoneTemplate = require('./templates/iphone');
 const layeredTemplate = require('./templates/layered');
@@ -12,7 +12,9 @@ const layeredTemplate = require('./templates/layered');
  *
  * @param {Buffer} imageBuffer - Буфер исходного изображения
  * @param {Object} template - Объект шаблона из БД
- * @param {Object} gradient - Объект градиента из БД
+ * @param {Object} backgroundConfig - Конфигурация фона (type + config)
+ * @param {string} backgroundConfig.type - Тип фона: 'gradient', 'solid', 'blur'
+ * @param {Object} backgroundConfig.config - Настройки фона (зависит от типа)
  * @param {Object} settings - Пользовательские настройки
  * @param {number} settings.radius - Радиус скругления углов (0-50)
  * @param {Object} settings.shadow - Настройки тени
@@ -22,7 +24,7 @@ const layeredTemplate = require('./templates/layered');
  * @param {string} settings.shadow.color - Цвет тени
  * @returns {Promise<Buffer>} Буфер обработанного изображения
  */
-async function processScreenshot(imageBuffer, template, gradient, settings = {}) {
+async function processScreenshot(imageBuffer, template, backgroundConfig, settings = {}) {
   const startTime = Date.now();
 
   // Настройки по умолчанию
@@ -38,20 +40,17 @@ async function processScreenshot(imageBuffer, template, gradient, settings = {})
   };
 
   try {
-    // Загрузить исходное изображение
-    const originalImage = await loadImage(imageBuffer);
-
-    // Выбрать шаблон
+    // Выбрать шаблон и применить обработку
     let result;
     switch (template.type) {
       case 'mac-window':
-        result = await macWindowTemplate.apply(originalImage, gradient, config, template.settings);
+        result = await macWindowTemplate.apply(imageBuffer, backgroundConfig, config, template.settings);
         break;
       case 'iphone':
-        result = await iphoneTemplate.apply(originalImage, gradient, config, template.settings);
+        result = await iphoneTemplate.apply(imageBuffer, backgroundConfig, config, template.settings);
         break;
       case 'layered':
-        result = await layeredTemplate.apply(originalImage, gradient, config, template.settings);
+        result = await layeredTemplate.apply(imageBuffer, backgroundConfig, config, template.settings);
         break;
       default:
         throw new Error(`Неизвестный тип шаблона: ${template.type}`);
