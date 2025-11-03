@@ -1,13 +1,11 @@
-/**
- * Обработчик текстовых сообщений
- */
-
 const userStates = require('../bot/state');
 const {
   extractTelegramLink,
   extractLinkFromForwarded,
   makeShareLink
 } = require('../utils/linkUtils');
+const { sendBackgroundKeyboard, handleWaitingBackground, sendSizeKeyboard } = require('./background');
+const { sendTemplateKeyboard, handleWaitingTemplate } = require('./messages');
 
 const TEMPLATES = [
   { label: 'iPhone', value: 'iphone' },
@@ -31,14 +29,15 @@ async function handleMessage(bot, msg) {
       await handleWaitingDescription(bot, msg, chatId, state);
     } else if (state.step === 'waiting_template') {
       await handleWaitingTemplate(bot, msg, chatId, state);
+    } else if (state.step === 'waiting_background') {
+      await handleWaitingBackground(bot, msg, chatId, state);
+    } else if (state.step === 'waiting_size') {
+      // TODO: добавить обработчик выбора размера
     }
   } catch (error) {
     console.error('❌ Ошибка при обработке сообщения:', error);
     try {
-      await bot.sendMessage(
-        msg.chat.id,
-        '❌ Произошла ошибка. Попробуйте ещё раз или используйте /cancel для отмены.'
-      );
+      await bot.sendMessage(chatId, '❌ Произошла ошибка. Попробуйте ещё раз или используйте /cancel для отмены.');
     } catch (err) {
       console.error('❌ Не удалось отправить сообщение об ошибке:', err);
     }
@@ -51,28 +50,19 @@ async function handleMessage(bot, msg) {
 async function handleWaitingLink(bot, msg, chatId) {
   let link = null;
 
-  // Проверяем текстовое сообщение со ссылкой
   if (msg.text && msg.text.includes('t.me/')) {
     link = extractTelegramLink(msg.text);
-  }
-  // Проверяем пересланное сообщение
-  else if (msg.forward_from_chat || msg.forward_from_message_id) {
+  } else if (msg.forward_from_chat || msg.forward_from_message_id) {
     link = extractLinkFromForwarded(msg);
   }
 
   if (!link) {
-    await bot.sendMessage(
-      chatId,
-      '⚠️ Не удалось получить ссылку. Попробуйте ещё раз или используйте /cancel.'
-    );
+    await bot.sendMessage(chatId, '⚠️ Не удалось получить ссылку. Попробуйте ещё раз или используйте /cancel.');
     return;
   }
 
   userStates.set(chatId, { step: 'waiting_desc', link });
-  await bot.sendMessage(
-    chatId,
-    `✅ Ссылка получена!\n\n📝 Теперь отправьте описание для этой ссылки:`
-  );
+  await bot.sendMessage(chatId, `✅ Ссылка получена!\n\n📝 Теперь отправьте описание для этой ссылки:`);
 }
 
 /**
@@ -82,10 +72,7 @@ async function handleWaitingDescription(bot, msg, chatId, state) {
   const description = msg.text || '';
   const shareLink = makeShareLink(state.link, description);
 
-  await bot.sendMessage(
-    chatId,
-    `✨ Готовая ссылка для шаринга:\n\n${shareLink}\n\n💡 Используйте /link для создания новой ссылки.`
-  );
+  await bot.sendMessage(chatId, `✨ Готовая ссылка для шаринга:\n\n${shareLink}\n\n💡 Используйте /link для создания новой ссылки.`);
 
   userStates.delete(chatId);
 }
@@ -94,20 +81,22 @@ async function handleWaitingDescription(bot, msg, chatId, state) {
  * Обработка этапа выбора шаблона оформления скриншота
  */
 async function handleWaitingTemplate(bot, msg, chatId, state) {
-  // Пример: выбираем шаблон по сообщению-кнопке
   const chosen = TEMPLATES.find(t => t.label.toLowerCase() === msg.text.toLowerCase());
+
   if (!chosen) {
     await bot.sendMessage(chatId, '❗ Выберите шаблон оформления через кнопку ниже.');
     await sendTemplateKeyboard(bot, chatId);
     return;
   }
+
   userStates.set(chatId, {
     ...state,
-    step: 'waiting_background', // На следующем этапе будет выбор цвета/фона
+    step: 'waiting_background',
     template: chosen.value
   });
+
   await bot.sendMessage(chatId, `✅ Выбран шаблон: ${chosen.label}. Теперь выберите цвет или фон для скриншота.`);
-  // sendBackgroundKeyboard(bot, chatId); // Этот шаг реализуем далее
+  await sendBackgroundKeyboard(bot, chatId);
 }
 
 /**
@@ -125,5 +114,6 @@ async function sendTemplateKeyboard(bot, chatId) {
 
 module.exports = {
   handleMessage,
-  sendTemplateKeyboard
+  sendTemplateKeyboard,
+  handleWaitingTemplate
 };
