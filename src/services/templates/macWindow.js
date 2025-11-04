@@ -141,16 +141,6 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
           stroke-linecap="round"
         />
 
-        <!-- Линия под title bar -->
-        <line
-          x1="${windowX}"
-          y1="${windowY + TITLE_BAR_HEIGHT}"
-          x2="${windowX + windowWidth}"
-          y2="${windowY + TITLE_BAR_HEIGHT}"
-          stroke="#B8B8B8"
-          stroke-width="1"
-        />
-
         ${templateSettings.windowButtons !== false ? `
         <!-- Кнопки окна (более стильные, без двойного наложения) -->
         <g>

@@ -44,17 +44,15 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
 
     // 4. Создать 3 задних слоя - каждый меньше предыдущего
     const backLayers = [];
-    // Слои уже по высоте, чтобы не выходили за границы
+    // Слои ОДИНАКОВОЙ ширины (для ровного вида), но разной высоты
     const layerHeightScales = [0.97, 0.94, 0.91]; // Каждый слой меньше по высоте
-    const layerWidthScales = [0.98, 0.96, 0.94];  // Немного уже по ширине
     const layerOpacities = [0.3, 0.2, 0.1]; // От ближнего к дальнему
-    const offsetY = -25; // Смещение вверх на 25px для каждого слоя
+    const offsetY = -22; // Смещение вверх на 22px для каждого слоя
 
     for (let i = 0; i < 3; i++) {
       const heightScale = layerHeightScales[i];
-      const widthScale = layerWidthScales[i];
       const opacity = layerOpacities[i];
-      const layerWidth = Math.round(actualMainWidth * widthScale);
+      const layerWidth = actualMainWidth; // ВСЕ слои одинаковой ширины!
       const layerHeight = Math.round(actualMainHeight * heightScale);
 
       // Создать SVG прямоугольника с закругленными углами и полупрозрачностью
