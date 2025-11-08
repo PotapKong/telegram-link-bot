@@ -9,6 +9,8 @@ const imageProcessor = require('../services/imageProcessor');
 const stateManager = require('../utils/stateManager');
 const keyboards = require('../utils/keyboards');
 const webhookLogger = require('../services/webhookLogger');
+const { validateImage } = require('../utils/imageValidator');
+const { checkLimit } = require('../utils/rateLimiter');
 const axios = require('axios');
 
 /**
@@ -19,6 +21,18 @@ async function handleScreenshotCommand(bot, msg) {
   const userId = msg.from.id;
 
   try {
+    // Проверка rate limit (5 запросов в минуту)
+    const rateLimit = checkLimit(userId, {
+      maxRequests: 5,
+      windowMs: 60 * 1000,
+      blockDurationMs: 5 * 60 * 1000
+    });
+
+    if (!rateLimit.allowed) {
+      await bot.sendMessage(chatId, rateLimit.message);
+      return;
+    }
+
     // Логировать использование команды
     await webhookLogger.logCommand(userId, msg.from.username || null, '/screenshot');
 
@@ -68,12 +82,24 @@ async function handlePhoto(bot, msg) {
     // Показать статус обработки
     const statusMsg = await bot.sendMessage(chatId, '⏳ Загружаю фото...');
 
-    // Скачать файл
-    const file = await bot.getFile(fileId);
-    const fileUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
+    // Скачать файл безопасным способом (без прямого использования токена)
+    const stream = bot.getFileStream(fileId);
+    const chunks = [];
 
-    const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
-    const imageBuffer = Buffer.from(response.data);
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+
+    const imageBuffer = Buffer.concat(chunks);
+
+    // Валидация изображения
+    try {
+      await validateImage(imageBuffer);
+    } catch (validationError) {
+      await bot.deleteMessage(chatId, statusMsg.message_id);
+      await bot.sendMessage(chatId, validationError.message + '\n\nПопробуй отправить другое изображение или /cancel для отмены.');
+      return;
+    }
 
     // Сохранить буфер в состоянии
     stateManager.updateState(userId, {

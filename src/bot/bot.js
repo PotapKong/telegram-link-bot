@@ -56,6 +56,7 @@ async function initBot() {
     console.log(`📱 Имя пользователя: @${botInfo.username}`);
     console.log(`🆔 ID бота: ${botInfo.id}`);
     console.log('🚀 Готов к приёму сообщений...');
+    return botInfo;
   } catch (error) {
     console.error('❌ Не удалось получить информацию о боте:', error);
     process.exit(1);

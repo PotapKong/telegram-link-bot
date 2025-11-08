@@ -23,6 +23,7 @@ const {
   handleCancel: handleScreenshotCancel
 } = require('./handlers/screenshot');
 const db = require('./database/db');
+const { startHealthCheckServer, setBotStatus } = require('./services/healthCheck');
 
 /**
  * Регистрация обработчиков команд
@@ -80,12 +81,23 @@ function registerCallbackHandlers() {
 async function main() {
   console.log('⚡ Запуск SnapKit Bot...\n');
 
+  // Запуск Health Check сервера
+  console.log('🏥 Запуск Health Check сервера...');
+  await startHealthCheckServer();
+
   // Инициализация базы данных
   console.log('📊 Подключение к PostgreSQL...');
   await db.initialize();
 
   // Инициализация бота
-  await initBot();
+  const botInfo = await initBot();
+
+  // Обновить статус бота для health check
+  setBotStatus({
+    isRunning: true,
+    username: botInfo?.username || null,
+    botId: botInfo?.id || null
+  });
 
   // Регистрация всех обработчиков
   registerCommandHandlers();
