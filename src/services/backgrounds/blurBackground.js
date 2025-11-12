@@ -20,8 +20,8 @@ async function generate(width, height, config) {
   const {
     sourceImage,
     blurAmount = 70,
-    brightness = -0.2,  // Немного затемняем для лучшей читаемости
-    saturation = 1.2    // Немного повышаем насыщенность
+    brightness = -0.2, // Немного затемняем для лучшей читаемости
+    saturation = 1.2 // Немного повышаем насыщенность
   } = config;
 
   if (!sourceImage) {
@@ -50,12 +50,11 @@ async function generate(width, height, config) {
     return await sharp(resized)
       .blur(blurAmount)
       .modulate({
-        brightness: 1 + brightness,  // Sharp использует множитель (1 = без изменений)
+        brightness: 1 + brightness, // Sharp использует множитель (1 = без изменений)
         saturation: saturation
       })
       .png()
       .toBuffer();
-
   } catch (error) {
     console.error('❌ Ошибка создания blur фона:', error);
     throw new Error(`Не удалось создать blur фон: ${error.message}`);

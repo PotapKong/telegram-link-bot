@@ -15,7 +15,7 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   max: 20, // максимум соединений в пуле
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 2000
 });
 
 // Обработка ошибок пула

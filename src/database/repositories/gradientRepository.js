@@ -18,10 +18,9 @@ async function getAllActive() {
  * Получить градиент по slug
  */
 async function getBySlug(slug) {
-  const result = await db.query(
-    'SELECT * FROM gradients WHERE slug = $1 AND is_active = true',
-    [slug]
-  );
+  const result = await db.query('SELECT * FROM gradients WHERE slug = $1 AND is_active = true', [
+    slug
+  ]);
   return result.rows[0];
 }
 
@@ -29,10 +28,7 @@ async function getBySlug(slug) {
  * Получить градиент по ID
  */
 async function getById(id) {
-  const result = await db.query(
-    'SELECT * FROM gradients WHERE id = $1',
-    [id]
-  );
+  const result = await db.query('SELECT * FROM gradients WHERE id = $1', [id]);
   return result.rows[0];
 }
 

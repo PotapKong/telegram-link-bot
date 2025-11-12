@@ -35,7 +35,7 @@ const OUTPUT_SIZES = {
   auto: {
     name: 'Авто',
     slug: 'auto',
-    width: null,  // Будет вычислено
+    width: null, // Будет вычислено
     height: null,
     aspectRatio: null
   }
@@ -57,11 +57,7 @@ function getOutputSize(slug) {
  * @returns {Array<Object>} Массив размеров
  */
 function getAllOutputSizes() {
-  return [
-    OUTPUT_SIZES.square,
-    OUTPUT_SIZES.portrait,
-    OUTPUT_SIZES.landscape
-  ];
+  return [OUTPUT_SIZES.square, OUTPUT_SIZES.portrait, OUTPUT_SIZES.landscape];
 }
 
 module.exports = {

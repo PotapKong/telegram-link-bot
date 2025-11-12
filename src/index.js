@@ -6,12 +6,7 @@
  */
 
 const { bot, initBot } = require('./bot/bot');
-const {
-  handleStart,
-  handleHelp,
-  handleLink,
-  handleCancel
-} = require('./handlers/commands');
+const { handleStart, handleHelp, handleLink, handleCancel } = require('./handlers/commands');
 const { handleMessage } = require('./handlers/messages');
 const { handleInlineQuery } = require('./handlers/inline');
 const {

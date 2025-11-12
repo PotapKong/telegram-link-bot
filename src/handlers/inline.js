@@ -2,11 +2,7 @@
  * Обработчик inline-запросов с поддержкой команд
  */
 
-const {
-  extractTelegramLink,
-  makeShareLink,
-  isValidTelegramLink
-} = require('../utils/linkUtils');
+const { extractTelegramLink, makeShareLink } = require('../utils/linkUtils');
 
 /**
  * Обработка inline-запросов
@@ -37,7 +33,6 @@ async function handleInlineQuery(bot, query) {
 
     // Если команда не найдена, обрабатываем как обычную ссылку
     return await handleLinkCommand(bot, query, queryText);
-
   } catch (error) {
     console.error('❌ Ошибка при обработке inline-запроса:', error);
     try {

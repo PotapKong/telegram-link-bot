@@ -26,17 +26,17 @@ async function validateImage(imageBuffer) {
   // Проверка 1: Размер файла
   if (imageBuffer.length > LIMITS.MAX_FILE_SIZE) {
     const sizeMB = (imageBuffer.length / (1024 * 1024)).toFixed(2);
-    throw new Error(
-      `❌ Файл слишком большой (${sizeMB}MB). Максимальный размер: 10MB.`
-    );
+    throw new Error(`❌ Файл слишком большой (${sizeMB}MB). Максимальный размер: 10MB.`);
   }
 
   let metadata;
   try {
     // Получить метаданные изображения
     metadata = await sharp(imageBuffer).metadata();
-  } catch (error) {
-    throw new Error('❌ Не удалось прочитать изображение. Файл поврежден или имеет неподдерживаемый формат.');
+  } catch {
+    throw new Error(
+      '❌ Не удалось прочитать изображение. Файл поврежден или имеет неподдерживаемый формат.'
+    );
   }
 
   // Проверка 2: Формат файла
@@ -50,7 +50,7 @@ async function validateImage(imageBuffer) {
   if (metadata.width > LIMITS.MAX_WIDTH || metadata.height > LIMITS.MAX_HEIGHT) {
     throw new Error(
       `❌ Разрешение слишком большое (${metadata.width}x${metadata.height}). ` +
-      `Максимум: ${LIMITS.MAX_WIDTH}x${LIMITS.MAX_HEIGHT} (4K).`
+        `Максимум: ${LIMITS.MAX_WIDTH}x${LIMITS.MAX_HEIGHT} (4K).`
     );
   }
 
@@ -58,14 +58,14 @@ async function validateImage(imageBuffer) {
   if (metadata.width < LIMITS.MIN_WIDTH || metadata.height < LIMITS.MIN_HEIGHT) {
     throw new Error(
       `❌ Разрешение слишком маленькое (${metadata.width}x${metadata.height}). ` +
-      `Минимум: ${LIMITS.MIN_WIDTH}x${LIMITS.MIN_HEIGHT}.`
+        `Минимум: ${LIMITS.MIN_WIDTH}x${LIMITS.MIN_HEIGHT}.`
     );
   }
 
   // Логирование успешной валидации
   console.log(
     `✅ Изображение валидно: ${metadata.format}, ${metadata.width}x${metadata.height}, ` +
-    `${(imageBuffer.length / 1024).toFixed(0)}KB`
+      `${(imageBuffer.length / 1024).toFixed(0)}KB`
   );
 
   return metadata;
@@ -75,8 +75,8 @@ async function validateImage(imageBuffer) {
  * Получить размер файла в человекочитаемом формате
  */
 function getReadableFileSize(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+  if (bytes < 1024) {return `${bytes} B`;}
+  if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(2)} KB`;}
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 

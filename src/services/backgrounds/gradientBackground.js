@@ -17,11 +17,7 @@ const { createLinearGradient, createRadialGradient } = require('../../utils/svgG
  * @returns {Promise<Buffer>} PNG буфер
  */
 async function generate(width, height, config) {
-  const {
-    colors = ['#FF6B6B', '#4ECDC4'],
-    angle = 135,
-    type = 'linear'
-  } = config;
+  const { colors = ['#FF6B6B', '#4ECDC4'], angle = 135, type = 'linear' } = config;
 
   // Валидация
   if (!Array.isArray(colors) || colors.length < 2) {
@@ -37,9 +33,7 @@ async function generate(width, height, config) {
   }
 
   // Конвертировать SVG в PNG через Sharp
-  return await sharp(svgBuffer)
-    .png()
-    .toBuffer();
+  return await sharp(svgBuffer).png().toBuffer();
 }
 
 module.exports = {

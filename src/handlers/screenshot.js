@@ -11,7 +11,6 @@ const keyboards = require('../utils/keyboards');
 const webhookLogger = require('../services/webhookLogger');
 const { validateImage } = require('../utils/imageValidator');
 const { checkLimit } = require('../utils/rateLimiter');
-const axios = require('axios');
 
 /**
  * Команда /screenshot - начать создание стилизованного скриншота
@@ -48,11 +47,11 @@ async function handleScreenshotCommand(bot, msg) {
     await bot.sendMessage(
       chatId,
       '📸 Отправь мне скриншот, который хочешь оформить.\n\n' +
-      'Я могу украсить его одним из стилей:\n' +
-      '🖥️ Mac Window — стиль окна macOS\n' +
-      '📱 iPhone — мокап iPhone\n' +
-      '📚 Layered — многослойный эффект\n\n' +
-      'Отправь фото или нажми /cancel для отмены.'
+        'Я могу украсить его одним из стилей:\n' +
+        '🖥️ Mac Window — стиль окна macOS\n' +
+        '📱 iPhone — мокап iPhone\n' +
+        '📚 Layered — многослойный эффект\n\n' +
+        'Отправь фото или нажми /cancel для отмены.'
     );
   } catch (error) {
     console.error('❌ Ошибка обработки /screenshot:', error);
@@ -97,7 +96,11 @@ async function handlePhoto(bot, msg) {
       await validateImage(imageBuffer);
     } catch (validationError) {
       await bot.deleteMessage(chatId, statusMsg.message_id);
-      await bot.sendMessage(chatId, validationError.message + '\n\nПопробуй отправить другое изображение или /cancel для отмены.');
+      await bot.sendMessage(
+        chatId,
+        `${validationError.message 
+          }\n\nПопробуй отправить другое изображение или /cancel для отмены.`
+      );
       return;
     }
 
@@ -115,17 +118,15 @@ async function handlePhoto(bot, msg) {
     const templates = await templateRepository.getAllActive();
 
     // Отправить выбор шаблона
-    await bot.sendMessage(
-      chatId,
-      '✨ Отлично! Теперь выбери стиль оформления:',
-      {
-        reply_markup: keyboards.createTemplateKeyboard(templates)
-      }
-    );
-
+    await bot.sendMessage(chatId, '✨ Отлично! Теперь выбери стиль оформления:', {
+      reply_markup: keyboards.createTemplateKeyboard(templates)
+    });
   } catch (error) {
     console.error('❌ Ошибка обработки фото:', error);
-    await bot.sendMessage(chatId, '❌ Не удалось загрузить фото. Попробуй ещё раз или отправь другое фото.');
+    await bot.sendMessage(
+      chatId,
+      '❌ Не удалось загрузить фото. Попробуй ещё раз или отправь другое фото.'
+    );
   }
 }
 
@@ -141,7 +142,9 @@ async function handleTemplateSelection(bot, query, templateSlug) {
     const state = stateManager.getState(userId);
 
     if (!state || state.step !== 'selecting_template') {
-      await bot.answerCallbackQuery(query.id, { text: '❌ Сессия устарела. Начни заново с /screenshot' });
+      await bot.answerCallbackQuery(query.id, {
+        text: '❌ Сессия устарела. Начни заново с /screenshot'
+      });
       return;
     }
 
@@ -173,7 +176,6 @@ async function handleTemplateSelection(bot, query, templateSlug) {
     );
 
     await bot.answerCallbackQuery(query.id);
-
   } catch (error) {
     console.error('❌ Ошибка выбора шаблона:', error);
     await bot.answerCallbackQuery(query.id, { text: '❌ Произошла ошибка' });
@@ -192,7 +194,9 @@ async function handleGradientSelection(bot, query, gradientSlug) {
     const state = stateManager.getState(userId);
 
     if (!state || state.step !== 'selecting_gradient') {
-      await bot.answerCallbackQuery(query.id, { text: '❌ Сессия устарела. Начни заново с /screenshot' });
+      await bot.answerCallbackQuery(query.id, {
+        text: '❌ Сессия устарела. Начни заново с /screenshot'
+      });
       return;
     }
 
@@ -207,8 +211,8 @@ async function handleGradientSelection(bot, query, gradientSlug) {
     // Обновить сообщение
     await bot.editMessageText(
       `✅ Выбран стиль: ${state.template.name}\n` +
-      `✅ Выбран градиент: ${gradient.name}\n\n` +
-      `⏳ Обрабатываю изображение...`,
+        `✅ Выбран градиент: ${gradient.name}\n\n` +
+        `⏳ Обрабатываю изображение...`,
       {
         chat_id: chatId,
         message_id: messageId
@@ -244,10 +248,11 @@ async function handleGradientSelection(bot, query, gradientSlug) {
 
     // Отправить результат
     const sentMessage = await bot.sendPhoto(chatId, result.buffer, {
-      caption: `✨ Готово!\n\n` +
-               `📐 Стиль: ${state.template.name}\n` +
-               `🎨 Градиент: ${gradient.name}\n` +
-               `⚡ Обработано за ${result.processingTime}ms`
+      caption:
+        `✨ Готово!\n\n` +
+        `📐 Стиль: ${state.template.name}\n` +
+        `🎨 Градиент: ${gradient.name}\n` +
+        `⚡ Обработано за ${result.processingTime}ms`
     });
 
     // Сохранить в историю
@@ -281,7 +286,6 @@ async function handleGradientSelection(bot, query, gradientSlug) {
     await bot.deleteMessage(chatId, messageId);
 
     console.log(`✅ Скриншот обработан для пользователя ${userId}`);
-
   } catch (error) {
     console.error('❌ Ошибка обработки градиента:', error);
 
@@ -295,7 +299,10 @@ async function handleGradientSelection(bot, query, gradientSlug) {
     });
 
     await bot.answerCallbackQuery(query.id, { text: '❌ Произошла ошибка при обработке' });
-    await bot.sendMessage(chatId, '❌ Не удалось обработать изображение. Попробуй ещё раз с /screenshot');
+    await bot.sendMessage(
+      chatId,
+      '❌ Не удалось обработать изображение. Попробуй ещё раз с /screenshot'
+    );
     stateManager.clearState(userId);
   }
 }
@@ -321,17 +328,13 @@ async function handleBackToTemplates(bot, query) {
 
     const templates = await templateRepository.getAllActive();
 
-    await bot.editMessageText(
-      '✨ Выбери стиль оформления:',
-      {
-        chat_id: chatId,
-        message_id: messageId,
-        reply_markup: keyboards.createTemplateKeyboard(templates)
-      }
-    );
+    await bot.editMessageText('✨ Выбери стиль оформления:', {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: keyboards.createTemplateKeyboard(templates)
+    });
 
     await bot.answerCallbackQuery(query.id);
-
   } catch (error) {
     console.error('❌ Ошибка возврата к шаблонам:', error);
     await bot.answerCallbackQuery(query.id, { text: '❌ Произошла ошибка' });
@@ -348,13 +351,10 @@ async function handleCancel(bot, query) {
 
   stateManager.clearState(userId);
 
-  await bot.editMessageText(
-    '❌ Операция отменена. Используй /screenshot чтобы начать заново.',
-    {
-      chat_id: chatId,
-      message_id: messageId
-    }
-  );
+  await bot.editMessageText('❌ Операция отменена. Используй /screenshot чтобы начать заново.', {
+    chat_id: chatId,
+    message_id: messageId
+  });
 
   await bot.answerCallbackQuery(query.id);
 }

@@ -37,8 +37,10 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
     // Фон
     let bg;
     if (backgroundConfig.type === 'blur') {
-      bg = await createBackground(backgroundConfig.type, canvasW, canvasH,
-        { ...backgroundConfig.config, sourceImage: imageBuffer });
+      bg = await createBackground(backgroundConfig.type, canvasW, canvasH, {
+        ...backgroundConfig.config,
+        sourceImage: imageBuffer
+      });
     } else {
       bg = await createBackground(backgroundConfig.type, canvasW, canvasH, backgroundConfig.config);
     }
@@ -106,8 +108,9 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
 
     // Маска с вырезом для Island
     const masked = await sharp(screen)
-      .composite([{
-        input: Buffer.from(`
+      .composite([
+        {
+          input: Buffer.from(`
           <svg width="${screenW}" height="${screenH}">
             <defs>
               <mask id="cut">
@@ -120,8 +123,9 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
             <rect width="${screenW}" height="${screenH}" fill="white" mask="url(#cut)"/>
           </svg>
         `),
-        blend: 'dest-in'
-      }])
+          blend: 'dest-in'
+        }
+      ])
       .png()
       .toBuffer();
 
@@ -135,7 +139,6 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
       .toBuffer();
 
     return result;
-
   } catch (error) {
     console.error('❌ iPhone:', error);
     throw new Error(`iPhone: ${error.message}`);

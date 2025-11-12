@@ -13,17 +13,19 @@
  */
 function createLinearGradient(width, height, colors, angle = 135) {
   // Преобразовать угол в координаты для SVG
-  const angleRad = (angle - 90) * Math.PI / 180;
+  const angleRad = ((angle - 90) * Math.PI) / 180;
   const x1 = Math.round(50 + Math.cos(angleRad) * 50);
   const y1 = Math.round(50 + Math.sin(angleRad) * 50);
   const x2 = Math.round(50 + Math.cos(angleRad + Math.PI) * 50);
   const y2 = Math.round(50 + Math.sin(angleRad + Math.PI) * 50);
 
   // Создать stops для градиента
-  const stops = colors.map((color, index) => {
-    const offset = (index / (colors.length - 1)) * 100;
-    return `<stop offset="${offset}%" stop-color="${color}" />`;
-  }).join('\n    ');
+  const stops = colors
+    .map((color, index) => {
+      const offset = (index / (colors.length - 1)) * 100;
+      return `<stop offset="${offset}%" stop-color="${color}" />`;
+    })
+    .join('\n    ');
 
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
@@ -50,10 +52,12 @@ function createLinearGradient(width, height, colors, angle = 135) {
  * @returns {Buffer} SVG буфер
  */
 function createRadialGradient(width, height, colors, cx = 50, cy = 50) {
-  const stops = colors.map((color, index) => {
-    const offset = (index / (colors.length - 1)) * 100;
-    return `<stop offset="${offset}%" stop-color="${color}" />`;
-  }).join('\n    ');
+  const stops = colors
+    .map((color, index) => {
+      const offset = (index / (colors.length - 1)) * 100;
+      return `<stop offset="${offset}%" stop-color="${color}" />`;
+    })
+    .join('\n    ');
 
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">

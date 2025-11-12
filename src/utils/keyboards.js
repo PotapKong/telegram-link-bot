@@ -6,24 +6,24 @@
  * Создать клавиатуру выбора шаблона
  */
 function createTemplateKeyboard(templates) {
-  const buttons = templates.map(template => {
-    const emoji = {
-      'mac-window': '🖥️',
-      'iphone': '📱',
-      'layered': '📚'
-    }[template.type] || '📄';
+  const buttons = templates.map((template) => {
+    const emoji =
+      {
+        'mac-window': '🖥️',
+        iphone: '📱',
+        layered: '📚'
+      }[template.type] || '📄';
 
-    return [{
-      text: `${emoji} ${template.name}`,
-      callback_data: `template:${template.slug}`
-    }];
+    return [
+      {
+        text: `${emoji} ${template.name}`,
+        callback_data: `template:${template.slug}`
+      }
+    ];
   });
 
   return {
-    inline_keyboard: [
-      ...buttons,
-      [{ text: '❌ Отмена', callback_data: 'cancel' }]
-    ]
+    inline_keyboard: [...buttons, [{ text: '❌ Отмена', callback_data: 'cancel' }]]
   };
 }
 
@@ -31,11 +31,13 @@ function createTemplateKeyboard(templates) {
  * Создать клавиатуру выбора градиента
  */
 function createGradientKeyboard(gradients) {
-  const buttons = gradients.map(gradient => {
-    return [{
-      text: `🎨 ${gradient.name}`,
-      callback_data: `gradient:${gradient.slug}`
-    }];
+  const buttons = gradients.map((gradient) => {
+    return [
+      {
+        text: `🎨 ${gradient.name}`,
+        callback_data: `gradient:${gradient.slug}`
+      }
+    ];
   });
 
   return {
@@ -61,9 +63,7 @@ function createSettingsKeyboard() {
         { text: '➖ Тень', callback_data: 'shadow:decrease' },
         { text: '➕ Тень', callback_data: 'shadow:increase' }
       ],
-      [
-        { text: '✅ Готово', callback_data: 'settings:done' }
-      ],
+      [{ text: '✅ Готово', callback_data: 'settings:done' }],
       [
         { text: '🔙 Назад', callback_data: 'back_to_gradients' },
         { text: '❌ Отмена', callback_data: 'cancel' }
@@ -76,18 +76,17 @@ function createSettingsKeyboard() {
  * Создать клавиатуру с историей
  */
 function createHistoryKeyboard(screenshots) {
-  const buttons = screenshots.slice(0, 5).map((screenshot, index) => {
-    return [{
-      text: `📸 ${screenshot.template_name} + ${screenshot.gradient_name}`,
-      callback_data: `history:${screenshot.id}`
-    }];
+  const buttons = screenshots.slice(0, 5).map((screenshot, _index) => {
+    return [
+      {
+        text: `📸 ${screenshot.template_name} + ${screenshot.gradient_name}`,
+        callback_data: `history:${screenshot.id}`
+      }
+    ];
   });
 
   return {
-    inline_keyboard: [
-      ...buttons,
-      [{ text: '❌ Закрыть', callback_data: 'cancel' }]
-    ]
+    inline_keyboard: [...buttons, [{ text: '❌ Закрыть', callback_data: 'cancel' }]]
   };
 }
 

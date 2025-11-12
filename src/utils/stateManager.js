@@ -43,7 +43,8 @@ function updateState(userId, data) {
 /**
  * Очистка старых состояний (запускать периодически)
  */
-function cleanupOldStates(maxAgeMs = 30 * 60 * 1000) { // 30 минут
+function cleanupOldStates(maxAgeMs = 30 * 60 * 1000) {
+  // 30 минут
   const now = Date.now();
   for (const [userId, state] of userStates.entries()) {
     if (now - state.updatedAt > maxAgeMs) {
@@ -53,10 +54,13 @@ function cleanupOldStates(maxAgeMs = 30 * 60 * 1000) { // 30 минут
 }
 
 // Очищать старые состояния каждые 10 минут
-setInterval(() => {
-  cleanupOldStates();
-  console.log(`🧹 Очищены старые состояния. Активных: ${userStates.size}`);
-}, 10 * 60 * 1000);
+setInterval(
+  () => {
+    cleanupOldStates();
+    console.log(`🧹 Очищены старые состояния. Активных: ${userStates.size}`);
+  },
+  10 * 60 * 1000
+);
 
 module.exports = {
   getState,

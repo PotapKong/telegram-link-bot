@@ -16,7 +16,10 @@ function parseHexColor(hex) {
 
   // Если короткий формат (#RGB) - преобразовать в #RRGGBB
   if (hex.length === 3) {
-    hex = hex.split('').map(char => char + char).join('');
+    hex = hex
+      .split('')
+      .map((char) => char + char)
+      .join('');
   }
 
   // Валидация
@@ -54,8 +57,8 @@ async function generate(width, height, config) {
       background: { r, g, b, alpha: 1 }
     }
   })
-  .png()
-  .toBuffer();
+    .png()
+    .toBuffer();
 }
 
 module.exports = {

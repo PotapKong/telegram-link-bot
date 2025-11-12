@@ -17,7 +17,7 @@ async function handleMessage(bot, msg) {
     const chatId = msg.chat.id;
     const state = userStates.get(chatId);
 
-    if (!state) return;
+    if (!state) {return;}
 
     if (state.step === 'waiting_link') {
       await handleWaitingLink(bot, msg, chatId);

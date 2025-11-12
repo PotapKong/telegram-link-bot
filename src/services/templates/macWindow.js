@@ -37,12 +37,12 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
     const imageHeight = imageMetadata.height;
 
     // 2. Размеры окна
-    const windowWidth = imageWidth + (WINDOW_PADDING * 2);
-    const windowHeight = imageHeight + TITLE_BAR_HEIGHT + (WINDOW_PADDING * 2);
+    const windowWidth = imageWidth + WINDOW_PADDING * 2;
+    const windowHeight = imageHeight + TITLE_BAR_HEIGHT + WINDOW_PADDING * 2;
 
     // 3. Размеры холста
-    const canvasWidth = windowWidth + (PADDING * 2);
-    const canvasHeight = windowHeight + (PADDING * 2);
+    const canvasWidth = windowWidth + PADDING * 2;
+    const canvasHeight = windowHeight + PADDING * 2;
 
     // 4. Создать фон
     const background = await createBackground(
@@ -141,7 +141,9 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
           stroke-linecap="round"
         />
 
-        ${templateSettings.windowButtons !== false ? `
+        ${
+          templateSettings.windowButtons !== false
+            ? `
         <!-- Кнопки окна (более стильные, без двойного наложения) -->
         <g>
           <!-- Красная кнопка (Close) -->
@@ -189,7 +191,9 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
             fill="url(#greenButtonGrad)"
           />
         </g>
-        ` : ''}
+        `
+            : ''
+        }
       </svg>
     `;
 
@@ -241,7 +245,6 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
       .toBuffer();
 
     return result;
-
   } catch (error) {
     console.error('❌ Ошибка Mac Window шаблона:', error);
     throw new Error(`Не удалось применить Mac Window шаблон: ${error.message}`);

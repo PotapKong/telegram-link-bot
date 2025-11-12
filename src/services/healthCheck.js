@@ -65,7 +65,6 @@ app.get('/health', async (req, res) => {
     // Если всё здорово - 200, иначе - 503
     const httpStatus = status.status === 'healthy' ? 200 : 503;
     res.status(httpStatus).json(status);
-
   } catch (error) {
     console.error('❌ Health check failed:', error);
     res.status(503).json({

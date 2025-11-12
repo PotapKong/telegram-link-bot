@@ -7,14 +7,17 @@
 const limits = new Map();
 
 // Очистка старых записей каждые 5 минут
-setInterval(() => {
-  const now = Date.now();
-  for (const [userId, data] of limits.entries()) {
-    if (now > data.resetAt && (!data.blockedUntil || now > data.blockedUntil)) {
-      limits.delete(userId);
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [userId, data] of limits.entries()) {
+      if (now > data.resetAt && (!data.blockedUntil || now > data.blockedUntil)) {
+        limits.delete(userId);
+      }
     }
-  }
-}, 5 * 60 * 1000);
+  },
+  5 * 60 * 1000
+);
 
 /**
  * Проверить rate limit для пользователя

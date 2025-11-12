@@ -18,10 +18,9 @@ async function getAllActive() {
  * Получить шаблон по slug
  */
 async function getBySlug(slug) {
-  const result = await db.query(
-    'SELECT * FROM templates WHERE slug = $1 AND is_active = true',
-    [slug]
-  );
+  const result = await db.query('SELECT * FROM templates WHERE slug = $1 AND is_active = true', [
+    slug
+  ]);
   return result.rows[0];
 }
 
@@ -29,10 +28,7 @@ async function getBySlug(slug) {
  * Получить шаблон по ID
  */
 async function getById(id) {
-  const result = await db.query(
-    'SELECT * FROM templates WHERE id = $1',
-    [id]
-  );
+  const result = await db.query('SELECT * FROM templates WHERE id = $1', [id]);
   return result.rows[0];
 }
 
@@ -66,13 +62,7 @@ async function update(id, template) {
      SET name = $1, description = $2, settings = $3, is_active = $4, updated_at = CURRENT_TIMESTAMP
      WHERE id = $5
      RETURNING *`,
-    [
-      template.name,
-      template.description,
-      JSON.stringify(template.settings),
-      template.is_active,
-      id
-    ]
+    [template.name, template.description, JSON.stringify(template.settings), template.is_active, id]
   );
   return result.rows[0];
 }

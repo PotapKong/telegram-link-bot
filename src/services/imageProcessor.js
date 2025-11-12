@@ -44,13 +44,28 @@ async function processScreenshot(imageBuffer, template, backgroundConfig, settin
     let result;
     switch (template.type) {
       case 'mac-window':
-        result = await macWindowTemplate.apply(imageBuffer, backgroundConfig, config, template.settings);
+        result = await macWindowTemplate.apply(
+          imageBuffer,
+          backgroundConfig,
+          config,
+          template.settings
+        );
         break;
       case 'iphone':
-        result = await iphoneTemplate.apply(imageBuffer, backgroundConfig, config, template.settings);
+        result = await iphoneTemplate.apply(
+          imageBuffer,
+          backgroundConfig,
+          config,
+          template.settings
+        );
         break;
       case 'layered':
-        result = await layeredTemplate.apply(imageBuffer, backgroundConfig, config, template.settings);
+        result = await layeredTemplate.apply(
+          imageBuffer,
+          backgroundConfig,
+          config,
+          template.settings
+        );
         break;
       default:
         throw new Error(`Неизвестный тип шаблона: ${template.type}`);
@@ -63,7 +78,6 @@ async function processScreenshot(imageBuffer, template, backgroundConfig, settin
       buffer: result,
       processingTime
     };
-
   } catch (error) {
     console.error('❌ Ошибка обработки изображения:', error);
     throw error;

@@ -21,9 +21,8 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
   const finalHeight = templateSettings.outputHeight || 1080;
 
   try {
-    // 1. Получить метаданные скриншота
+    // 1. Создать Sharp объект для обработки скриншота
     const screenshot = sharp(imageBuffer);
-    const metadata = await screenshot.metadata();
 
     // 2. Вычислить размер основного слоя (80% от финального размера)
     const mainLayerWidth = Math.round(finalWidth * 0.8);
@@ -96,12 +95,10 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
     let backgroundBuffer;
     if (backgroundConfig.type === 'blur') {
       // Для blur фона передаём исходный скриншот
-      backgroundBuffer = await createBackground(
-        backgroundConfig.type,
-        finalWidth,
-        finalHeight,
-        { ...backgroundConfig.config, sourceImage: imageBuffer }
-      );
+      backgroundBuffer = await createBackground(backgroundConfig.type, finalWidth, finalHeight, {
+        ...backgroundConfig.config,
+        sourceImage: imageBuffer
+      });
     } else {
       backgroundBuffer = await createBackground(
         backgroundConfig.type,
@@ -144,15 +141,13 @@ async function apply(imageBuffer, backgroundConfig, config, templateSettings = {
     });
 
     // 8. Собрать итоговое изображение
-    const result = await sharp(backgroundBuffer)
-      .composite(compositeArray)
-      .png()
-      .toBuffer();
+    const result = await sharp(backgroundBuffer).composite(compositeArray).png().toBuffer();
 
-    console.log(`✅ Layered шаблон: ${finalWidth}x${finalHeight}, основной слой ${actualMainWidth}x${actualMainHeight}, 3 задних слоя`);
+    console.log(
+      `✅ Layered шаблон: ${finalWidth}x${finalHeight}, основной слой ${actualMainWidth}x${actualMainHeight}, 3 задних слоя`
+    );
 
     return result;
-
   } catch (error) {
     console.error('❌ Ошибка генерации Layered шаблона:', error);
     throw new Error(`Не удалось создать Layered шаблон: ${error.message}`);
